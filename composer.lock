@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "88970a0117c062eed55fa8728fc43833",
+    "content-hash": "fc7df4cff89e769ee48458d1b33b29a5",
     "packages": [
         {
             "name": "brick/math",
@@ -5568,6 +5568,45 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/v2.3.0"
             },
             "time": "2024-12-21T16:25:41+00:00"
+        },
+        {
+            "name": "uspdev/replicado",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/uspdev/replicado.git",
+                "reference": "6626334affa18eb548420e323355e93ad0052777"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uspdev/replicado/zipball/6626334affa18eb548420e323355e93ad0052777",
+                "reference": "6626334affa18eb548420e323355e93ad0052777",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Uspdev\\Replicado\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Thiago Gomes Verissimo",
+                    "email": "thiago.verissimo@usp.br",
+                    "homepage": "https://github.com/thiagogomesverissimo"
+                }
+            ],
+            "description": "Classes PHP que consome dados do Sybase Replicado",
+            "homepage": "https://github.com/uspdev/replicado",
+            "support": {
+                "issues": "https://github.com/uspdev/replicado/issues",
+                "source": "https://github.com/uspdev/replicado/tree/master"
+            },
+            "time": "2018-04-01T19:30:40+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
