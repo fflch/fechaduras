@@ -26,8 +26,10 @@ class FechaduraController extends Controller
         $response = Http::post($route, [
             "object" => "users",
         ]);
-        dd($response->json());
+        
+        $usuarios = $response->json()['users'];
 
-        return 'ok';
+        // 3 - passar os dados para a view
+        return view('fechadura.index', ['usuarios' => $usuarios]);
     }
 }
