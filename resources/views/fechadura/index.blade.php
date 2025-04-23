@@ -20,6 +20,10 @@
     </style>
 </head>
 <body>
+    <form method="post" action="/sincronizar">
+        @csrf
+        <button type="submit" name="btn">Sincronizar</button>
+    </form>
     <h1>Usuários da fechadura</h1>
     
     <table>

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fc7df4cff89e769ee48458d1b33b29a5",
+    "content-hash": "e85b217bcfc3d0d2ed93998c7b1ac05a",
     "packages": [
         {
             "name": "brick/math",
@@ -5570,21 +5570,72 @@
             "time": "2024-12-21T16:25:41+00:00"
         },
         {
-            "name": "uspdev/replicado",
-            "version": "v1.0.1",
+            "name": "uspdev/cache",
+            "version": "1.0.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/uspdev/replicado.git",
-                "reference": "6626334affa18eb548420e323355e93ad0052777"
+                "url": "https://github.com/uspdev/cache.git",
+                "reference": "5ac05e7c2913ddb1e35f5652b0930f19b5fb283c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/uspdev/replicado/zipball/6626334affa18eb548420e323355e93ad0052777",
-                "reference": "6626334affa18eb548420e323355e93ad0052777",
+                "url": "https://api.github.com/repos/uspdev/cache/zipball/5ac05e7c2913ddb1e35f5652b0930f19b5fb283c",
+                "reference": "5ac05e7c2913ddb1e35f5652b0930f19b5fb283c",
                 "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0"
             },
             "type": "library",
             "autoload": {
+                "psr-4": {
+                    "Uspdev\\Cache\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Masaki Kawabata Neto",
+                    "email": "masaki.kawabata@gmail.com"
+                }
+            ],
+            "description": "Library to connect to cache server",
+            "homepage": "https://github.com/uspdev/cache",
+            "support": {
+                "issues": "https://github.com/uspdev/cache/issues",
+                "source": "https://github.com/uspdev/cache/tree/1.0.0"
+            },
+            "time": "2021-04-07T23:14:52+00:00"
+        },
+        {
+            "name": "uspdev/replicado",
+            "version": "1.25.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/uspdev/replicado.git",
+                "reference": "6158c2243a82eeb4bd19bbff4fc4bec3939bd44b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uspdev/replicado/zipball/6158c2243a82eeb4bd19bbff4fc4bec3939bd44b",
+                "reference": "6158c2243a82eeb4bd19bbff4fc4bec3939bd44b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-pdo_dblib": "*",
+                "illuminate/collections": "^8 || ^9 || ^10 || ^11 || ^12",
+                "monolog/monolog": "^2 || ^3",
+                "php": "^7 || ^8",
+                "uspdev/cache": "^1"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "helpers/helpers.php"
+                ],
                 "psr-4": {
                     "Uspdev\\Replicado\\": "src"
                 }
@@ -5600,13 +5651,52 @@
                     "homepage": "https://github.com/thiagogomesverissimo"
                 }
             ],
-            "description": "Classes PHP que consome dados do Sybase Replicado",
+            "description": "Classes PHP que consome dados do Replicado USP",
             "homepage": "https://github.com/uspdev/replicado",
             "support": {
                 "issues": "https://github.com/uspdev/replicado/issues",
-                "source": "https://github.com/uspdev/replicado/tree/master"
+                "source": "https://github.com/uspdev/replicado/tree/1.25.4"
             },
-            "time": "2018-04-01T19:30:40+00:00"
+            "time": "2025-04-09T14:36:59+00:00"
+        },
+        {
+            "name": "uspdev/wsfoto",
+            "version": "2.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/uspdev/wsfoto.git",
+                "reference": "8129b629b8da6c9b6b708d3c7188046e97ffc2f6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uspdev/wsfoto/zipball/8129b629b8da6c9b6b708d3c7188046e97ffc2f6",
+                "reference": "8129b629b8da6c9b6b708d3c7188046e97ffc2f6",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Uspdev\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Thiago Gomes Verissimo",
+                    "email": "thiago.verissimo@usp.br",
+                    "homepage": "https://github.com/thiagogomesverissimo"
+                }
+            ],
+            "description": "Classe PHP que abstrai requisições SOAP do wsfoto USP",
+            "homepage": "https://github.com/uspdev/wsfoto",
+            "support": {
+                "issues": "https://github.com/uspdev/wsfoto/issues",
+                "source": "https://github.com/uspdev/wsfoto/tree/2.0.2"
+            },
+            "time": "2022-03-25T21:05:01+00:00"
         },
         {
             "name": "vlucas/phpdotenv",

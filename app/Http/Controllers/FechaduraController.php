@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Uspdev\Replicado\Pessoa;
+use Uspdev\Wsfoto;
 
 class FechaduraController extends Controller
 {
     # https://www.controlid.com.br/docs/access-api-pt/primeiros-passos/realizar-login/
 
+    //cadastrar quem não tem cadastro na fechadura e atualizar o registro de quem já está cadastrado
     public function index(){
 
         // 1 - requisição para login: rota: login.fcgi
@@ -30,6 +34,76 @@ class FechaduraController extends Controller
         $usuarios = $response->json()['users'];
 
         // 3 - passar os dados para a view
-        return view('fechadura.index', ['usuarios' => $usuarios]);
+        return view('fechadura.index', ['usuarios' => $usuarios, 'session' => $session]);
     }
+
+    //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
+    public function sincronizar(Request $request){
+        
+        $ip = '10.84.0.62';
+        $routeCreate = "http://" . $ip . "/create_objects.fcgi?session=" . $this->index()->session;
+        $routeUpdate = "http://". $ip ."/modify_objects.fcgi?session=".$this->index()->session;
+
+        $usuariosFechadura = $this->index()->usuarios;
+        $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
+
+        $fechaduraId = [];
+        foreach($usuariosFechadura as $user){
+            $fechaduraId[$user['registration']] = $user; //pega todos os usuários da fechadura pela matrícula (este número é o codpes).
+        }
+        
+        $replicadoId = [];
+        foreach($usuariosReplicado as $fflch){
+            $replicadoId[$fflch['codpes']] = $fflch; //pega todos os usuários do replicado pelo codpes
+        }
+
+        /*
+        diferença entre os usuários da fechadura e o replicado. 
+        Se alguém novo for inserido no replicado, será cadastrado na fechadura
+        */
+        $faltantes = array_diff_key($replicadoId, $fechaduraId); 
+
+        foreach($faltantes as $codpes => $faltante){
+        //if(!empty($faltante)){
+        //if(!isset($fechaduraId[$codpes])){
+        if(!isset($faltantes[$codpes])){ //vefificar se já existe um codpes, se não existir, cadastre. Se existir atualize.
+            dd($faltantes[$codpes]);
+            $response = Http::asJson()->post($routeCreate, [
+                'object' => 'users',
+                'values' => [
+                    [
+                    //cadastrando nº usp como id pra evitar possíveis conflitos futuros (há usuários já cadastrados com id ordinal)
+                    'id' => $codpes, 
+                    'registration' => $codpes,
+                    'name' => $faltante['nompesttd'],
+                    'password' => '', 
+                    'salt' => ''
+                    ]
+                ]
+            ]);
+        }else{
+            $response = Http::asJson()->post($routeUpdate,[ //link pra update
+                'object' => 'users',
+                'values' => [
+                    'name' => $faltante['nompesttd'],
+                    'registration' => "$codpes",
+                    'begin_time' => 0,
+                    'end_time' => 1577836800
+                ],
+                'where' => [
+                    'users' => [
+                        'id' => $codpes
+                    ]
+                ]
+            ]);
+            }
+        }   
+    }
+
+    public function fotos(){
+        $foto = Wsfoto::obter('14605185');
+        header('Content-Type: image/png');
+        echo base64_decode($foto);
+    }
+
 }
