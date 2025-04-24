@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Uspdev\Replicado\Pessoa;
 use Uspdev\Wsfoto;
@@ -64,10 +65,10 @@ class FechaduraController extends Controller
         $faltantes = array_diff_key($replicadoId, $fechaduraId); 
 
         foreach($faltantes as $codpes => $faltante){
-        //if(!empty($faltante)){
+        
         //if(!isset($fechaduraId[$codpes])){
-        if(!isset($faltantes[$codpes])){ //vefificar se já existe um codpes, se não existir, cadastre. Se existir atualize.
-            dd($faltantes[$codpes]);
+        //if(!empty($faltantes[$codpes])){
+        if(!isset($faltantes)){ //vefificar se já existe um codpes, se não existir, cadastre. Se existir atualize.
             $response = Http::asJson()->post($routeCreate, [
                 'object' => 'users',
                 'values' => [
@@ -75,20 +76,19 @@ class FechaduraController extends Controller
                     //cadastrando nº usp como id pra evitar possíveis conflitos futuros (há usuários já cadastrados com id ordinal)
                     'id' => $codpes, 
                     'registration' => $codpes,
-                    'name' => $faltante['nompesttd'],
+                    'name' => $faltante['nompesttd'] ?? $faltante['nompes'],
                     'password' => '', 
                     'salt' => ''
                     ]
                 ]
             ]);
+            return redirect()->back()->with('success','Usuário(s) cadastrado(s)');
         }else{
             $response = Http::asJson()->post($routeUpdate,[ //link pra update
                 'object' => 'users',
                 'values' => [
-                    'name' => $faltante['nompesttd'],
+                    'name' => $faltante['nompesttd'] ?? $faltante['nompes'],
                     'registration' => "$codpes",
-                    'begin_time' => 0,
-                    'end_time' => 1577836800
                 ],
                 'where' => [
                     'users' => [
@@ -96,14 +96,32 @@ class FechaduraController extends Controller
                     ]
                 ]
             ]);
-            }
-        }   
+        }
+    }   
+        return redirect()->back()->with('success','Dados sincronizados');
     }
 
     public function fotos(){
-        $foto = Wsfoto::obter('14605185');
-        header('Content-Type: image/png');
-        echo base64_decode($foto);
-    }
 
+        $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
+
+        foreach($usuariosReplicado as $usuario){
+            $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $usuario['codpes'] ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
+            $data = $usuario['codpes'];
+            $foto = Wsfoto::obter($data);
+            header('Content-Type: image/png');
+            $img = base64_decode($foto);
+
+            //$imageData = File::get(public_path('ich.png'));
+            $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
+            ->withBody($img, 'application/octet-stream')
+            ->post($ip);    
+        }
+    
+        if($response->successful()){
+            echo 'sucesso';
+        }else{
+            echo $response->getReasonPhrase() .  $response;
+        }
+    }
 }
