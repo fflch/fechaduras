@@ -60,9 +60,7 @@ class FechaduraController extends Controller
         $faltantes = array_diff_key($replicadoId, $fechaduraId); 
 
         foreach($faltantes as $codpes => $faltante){
-        
-        //if(!isset($fechaduraId[$codpes])){
-        //if(!empty($faltantes[$codpes])){
+
         if(!isset($faltantes)){ //vefificar se já existe um codpes, se não existir, cadastre. Se existir atualize.
             $response = Http::asJson()->post($routeCreate, [
                 'object' => 'users',
@@ -107,7 +105,6 @@ class FechaduraController extends Controller
             header('Content-Type: image/png');
             $img = base64_decode($foto);
 
-            //$imageData = File::get(public_path('ich.png'));
             $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
             ->withBody($img, 'application/octet-stream')
             ->post($ip);    
