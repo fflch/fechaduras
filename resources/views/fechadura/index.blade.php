@@ -24,11 +24,6 @@
         @csrf
         <button type="submit" name="btn" class="btn btn-success">Sincronizar dados</button>
     </form>
-    <form method="post" action="/fotos" style="margin-top:10px;">
-        @csrf
-        <button type="submit">Atualizar fotos dos usuários</button>
-    </form>
-
     @if(session('success'))
     {{ session('success') }}
     @endif

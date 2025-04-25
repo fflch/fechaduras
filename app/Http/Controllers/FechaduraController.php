@@ -42,26 +42,31 @@ class FechaduraController extends Controller
 
         $usuariosFechadura = $this->index()->usuarios;
         $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
+        //$usuariosReplicado = User::all()->toArray(); //somente por perfomance.
 
         $fechaduraId = [];
+        $fechaduraReg = [];
         foreach($usuariosFechadura as $user){
-            $fechaduraId[$user['registration']] = $user; //pega todos os usuários da fechadura pela matrícula (este número é o codpes).
+            $fechaduraId[$user['id']] = $user; //pega todos os usuários da fechadura pela matrícula (este número é o codpes).
+            $fechaduraReg[$user['registration']] = $user;
         }
         
         $replicadoId = [];
         foreach($usuariosReplicado as $fflch){
             $replicadoId[$fflch['codpes']] = $fflch; //pega todos os usuários do replicado pelo codpes
         }
-
-        /*
-        diferença entre os usuários da fechadura e o replicado. 
-        Se alguém novo for inserido no replicado, será cadastrado na fechadura
-        */
-        $faltantes = array_diff_key($replicadoId, $fechaduraId); 
+        
+        $faltantes = array_diff_key($replicadoId, $fechaduraReg); // usar a matrícula
 
         foreach($faltantes as $codpes => $faltante){
-
-        if(!isset($faltantes)){ //vefificar se já existe um codpes, se não existir, cadastre. Se existir atualize.
+        $isset = 
+        isset($fechaduraReg[$codpes]['registration'])
+        ? $fechaduraReg[$codpes]['registration'] 
+        : $fechaduraId[$codpes]['id'] ?? ''; //pega o codpes pelo ID ou Matrícula do usuário, se não houver nenhum, ocorre o cadastro.
+        
+        if(!empty($faltantes[$codpes]) && 
+        $faltantes[$codpes]['codpes'] != $isset){ //vefificar se já existe um codpes, se não existir, cadastre. Se existir atualize.
+            
             $response = Http::asJson()->post($routeCreate, [
                 'object' => 'users',
                 'values' => [
@@ -75,13 +80,25 @@ class FechaduraController extends Controller
                     ]
                 ]
             ]);
-            return redirect()->back()->with('success','Usuário(s) cadastrado(s)');
+            if($faltantes[$codpes]){
+                $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $codpes ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
+                $data = $codpes;
+                $foto = Wsfoto::obter($data);
+                header('Content-Type: image/png');
+                $img = base64_decode($foto);
+                if(isset($foto)){
+                    $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
+                    ->withBody($img, 'application/octet-stream')
+                    ->post($ip);    
+                }
+            }
         }else{
             $response = Http::asJson()->post($routeUpdate,[ //link pra update
                 'object' => 'users',
                 'values' => [
+                    'id' => $codpes,
                     'name' => $faltante['nompesttd'] ?? $faltante['nompes'],
-                    'registration' => "$codpes",
+                    'registration' => (string)$codpes,
                 ],
                 'where' => [
                     'users' => [
@@ -89,31 +106,18 @@ class FechaduraController extends Controller
                     ]
                 ]
             ]);
-        }
-    }   
-        return redirect()->back()->with('success','Dados sincronizados');
-    }
-
-    public function fotos(){
-
-        $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
-
-        foreach($usuariosReplicado as $usuario){
-            $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $usuario['codpes'] ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
-            $data = $usuario['codpes'];
+            $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $faltante['codpes'] ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
+            $data = $faltante['codpes'];
             $foto = Wsfoto::obter($data);
             header('Content-Type: image/png');
             $img = base64_decode($foto);
-
-            $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
-            ->withBody($img, 'application/octet-stream')
-            ->post($ip);    
+            if(isset($foto)){
+                $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
+                ->withBody($img, 'application/octet-stream')
+                ->post($ip);    
+            }
         }
-    
-        if($response->successful()){
-            echo 'sucesso';
-        }else{
-            echo $response->getReasonPhrase() .  $response;
-        }
+    }
+        return redirect()->back()->with('success','Dados sincronizados');
     }
 }
