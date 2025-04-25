@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Uspdev\Replicado\Pessoa;
 use Uspdev\Wsfoto;
+use App\Services\LockSessionService;
 
 class FechaduraController extends Controller
 {
@@ -15,15 +16,9 @@ class FechaduraController extends Controller
 
     //cadastrar quem não tem cadastro na fechadura e atualizar o registro de quem já está cadastrado
     public function index(){
-
         // 1 - requisição para login: rota: login.fcgi
         $ip = '10.84.0.62';
-        $response = Http::post('http://' . $ip . '/login.fcgi', [
-            'login' => env('FECHADURAS_LOGIN'),
-            'password' => env('FECHADURAS_PASSWORD'),
-        ]);
-        $response = $response->json();
-        $session = $response['session'];
+        $session = LockSessionService::conexao($ip);
 
         // 2 - listas usuários /load_objects.fcgi
         $route = 'http://' . $ip . '/load_objects.fcgi?session=' . $session;
