@@ -20,8 +20,16 @@
     </style>
 </head>
 <body>
+    <form method="post" action="/sincronizar">
+        @csrf
+        <button type="submit" name="btn" class="btn btn-success">Sincronizar dados</button>
+    </form>
+    @if(session('success'))
+    {{ session('success') }}
+    @endif
+
     <h1>Usuários da fechadura</h1>
-    
+    {{ count($usuarios) . " Usuários" }}
     <table>
         <thead>
             <tr>
