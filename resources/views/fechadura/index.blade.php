@@ -29,7 +29,7 @@
     @endif
 
     <h1>Usuários da fechadura</h1>
-    
+    {{ count($usuarios) . " Usuários" }}
     <table>
         <thead>
             <tr>

@@ -42,7 +42,6 @@ class FechaduraController extends Controller
 
         $usuariosFechadura = $this->index()->usuarios;
         $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
-        //$usuariosReplicado = User::all()->toArray(); //somente por perfomance.
 
         $fechaduraId = [];
         $fechaduraReg = [];
@@ -73,7 +72,7 @@ class FechaduraController extends Controller
                     [
                     //cadastrando nº usp como id pra evitar possíveis conflitos futuros (há usuários já cadastrados com id ordinal)
                     'id' => $codpes, 
-                    'registration' => $codpes,
+                    'registration' => (string)$codpes,
                     'name' => $faltante['nompesttd'] ?? $faltante['nompes'],
                     'password' => '', 
                     'salt' => ''
@@ -92,32 +91,34 @@ class FechaduraController extends Controller
                     ->post($ip);    
                 }
             }
-        }else{
-            $response = Http::asJson()->post($routeUpdate,[ //link pra update
-                'object' => 'users',
-                'values' => [
-                    'id' => $codpes,
-                    'name' => $faltante['nompesttd'] ?? $faltante['nompes'],
-                    'registration' => (string)$codpes,
-                ],
-                'where' => [
-                    'users' => [
-                        'id' => $codpes
-                    ]
-                ]
-            ]);
-            $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $faltante['codpes'] ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
-            $data = $faltante['codpes'];
-            $foto = Wsfoto::obter($data);
-            header('Content-Type: image/png');
-            $img = base64_decode($foto);
-            if(isset($foto)){
-                $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
-                ->withBody($img, 'application/octet-stream')
-                ->post($ip);    
-            }
         }
     }
-        return redirect()->back()->with('success','Dados sincronizados');
+    
+    foreach($replicadoId as $codpes => $replicado){
+        $response = Http::asJson()->post($routeUpdate,[ //link pra update
+            'object' => 'users',
+            'values' => [
+                'id' => (int)$codpes,
+                'name' => $replicado['nompesttd'] ?? $replicado['nompes'],
+                'registration' => (string)$codpes,
+            ],
+            'where' => [
+                'users' => [
+                    'id' => (int)$codpes
+                ]
+            ]
+        ]);
+        $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $codpes ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
+        
+        $foto = Wsfoto::obter($codpes);
+        header('Content-Type: image/png');
+        $img = base64_decode($foto);
+        if(isset($img)){
+            $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
+            ->withBody($img, 'application/octet-stream')
+            ->post($ip);
+        }
+    }
+        return back()->with('success','Dados sincronizados');
     }
 }
