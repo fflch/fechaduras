@@ -20,6 +20,7 @@
     </style>
 </head>
 <body>
+    <h1 style="color:red">NÃO TESTAR AINDA</h1>
     <form method="post" action="/sincronizar">
         @csrf
         <button type="submit" name="btn" class="btn btn-success">Sincronizar dados</button>

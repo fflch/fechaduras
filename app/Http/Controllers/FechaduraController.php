@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\FotoUpdateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Uspdev\Replicado\Pessoa;
 use Uspdev\Wsfoto;
 use App\Services\LockSessionService;
+use App\Services\ReplicadoService;
 
 class FechaduraController extends Controller
 {
@@ -19,7 +21,7 @@ class FechaduraController extends Controller
         // 1 - requisição para login: rota: login.fcgi
         $ip = '10.84.0.62';
         $session = LockSessionService::conexao($ip);
-
+        
         // 2 - listas usuários /load_objects.fcgi
         $route = 'http://' . $ip . '/load_objects.fcgi?session=' . $session;
 
@@ -28,25 +30,25 @@ class FechaduraController extends Controller
         ]);
         
         $usuarios = $response->json()['users'];
-
+        
         // 3 - passar os dados para a view
         return view('fechadura.index', ['usuarios' => $usuarios, 'session' => $session]);
     }
 
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
     public function sincronizar(Request $request){
+        //caso haja alguem diferente de fora do setor, adicionar um input com codpes para inserir "manualmente" na fechaduar
         
         $ip = '10.84.0.62';
-        $routeCreate = "http://" . $ip . "/create_objects.fcgi?session=" . $this->index()->session;
-        $routeUpdate = "http://". $ip ."/modify_objects.fcgi?session=".$this->index()->session;
-
         $usuariosFechadura = $this->index()->usuarios;
         $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
+        //$usuariosReplicado = User::all()->toArray();
 
         $fechaduraId = [];
         $fechaduraReg = [];
         foreach($usuariosFechadura as $user){
-            $fechaduraId[$user['id']] = $user; //pega todos os usuários da fechadura pela matrícula (este número é o codpes).
+            //pega todos os usuários da fechadura pela matrícula ou id (este número é o codpes).
+            $fechaduraId[$user['id']] = $user; 
             $fechaduraReg[$user['registration']] = $user;
         }
         
@@ -55,70 +57,16 @@ class FechaduraController extends Controller
             $replicadoId[$fflch['codpes']] = $fflch; //pega todos os usuários do replicado pelo codpes
         }
         
+        
         $faltantes = array_diff_key($replicadoId, $fechaduraReg); // usar a matrícula
-
-        foreach($faltantes as $codpes => $faltante){
-        $isset = 
-        isset($fechaduraReg[$codpes]['registration'])
-        ? $fechaduraReg[$codpes]['registration'] 
-        : $fechaduraId[$codpes]['id'] ?? ''; //pega o codpes pelo ID ou Matrícula do usuário, se não houver nenhum, ocorre o cadastro.
-        
-        if(!empty($faltantes[$codpes]) && 
-        $faltantes[$codpes]['codpes'] != $isset){ //vefificar se já existe um codpes, se não existir, cadastre. Se existir atualize.
-            
-            $response = Http::asJson()->post($routeCreate, [
-                'object' => 'users',
-                'values' => [
-                    [
-                    //cadastrando nº usp como id pra evitar possíveis conflitos futuros (há usuários já cadastrados com id ordinal)
-                    'id' => $codpes, 
-                    'registration' => (string)$codpes,
-                    'name' => $faltante['nompesttd'] ?? $faltante['nompes'],
-                    'password' => '', 
-                    'salt' => ''
-                    ]
-                ]
-            ]);
-            if($faltantes[$codpes]){
-                $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $codpes ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
-                $data = $codpes;
-                $foto = Wsfoto::obter($data);
-                header('Content-Type: image/png');
-                $img = base64_decode($foto);
-                if(isset($foto)){
-                    $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
-                    ->withBody($img, 'application/octet-stream')
-                    ->post($ip);    
-                }
-            }
+        dd($faltantes);
+        //jogar todo o foreach na service
+        if(!empty($faltantes)){
+            $response = ReplicadoService::cadastroUsuario($ip, $faltantes);
         }
-    }
-    
-    foreach($replicadoId as $codpes => $replicado){
-        $response = Http::asJson()->post($routeUpdate,[ //link pra update
-            'object' => 'users',
-            'values' => [
-                'id' => (int)$codpes,
-                'name' => $replicado['nompesttd'] ?? $replicado['nompes'],
-                'registration' => (string)$codpes,
-            ],
-            'where' => [
-                'users' => [
-                    'id' => (int)$codpes
-                ]
-            ]
-        ]);
-        $ip = "10.84.0.62/user_set_image.fcgi?user_id=". $codpes ."&timestamp=1624997578&match=0&session=" . $this->index()->session;
         
-        $foto = Wsfoto::obter($codpes);
-        header('Content-Type: image/png');
-        $img = base64_decode($foto);
-        if(isset($img)){
-            $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
-            ->withBody($img, 'application/octet-stream')
-            ->post($ip);
-        }
-    }
+        $response = ReplicadoService::updateUsuario($ip, $replicadoId);
+        
         return back()->with('success','Dados sincronizados');
     }
 }
