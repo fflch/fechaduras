@@ -3,6 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FechaduraController;
 
-Route::get('/usuarios',[FechaduraController::class, 'index']);
+// Rotas CRUD
+Route::get('/fechaduras',[FechaduraController::class, 'index']);
+Route::get('/fechaduras/create',[FechaduraController::class, 'create']);
+Route::post('/fechaduras',[FechaduraController::class, 'store']);
+Route::get('/fechaduras/{fechadura}',[FechaduraController::class, 'show']);
+Route::get('/fechaduras/{fechadura}/edit',[FechaduraController::class, 'edit']);
+Route::put('/fechaduras/{fechadura}',[FechaduraController::class, 'update']);
+Route::delete('/fechaduras/{fechadura}',[FechaduraController::class, 'destroy']);
+
 Route::post('/fotos', [FechaduraController::class, 'fotos']);
-Route::post('/sincronizar',[FechaduraController::class, 'sincronizar']);
+Route::post('/fechaduras/{fechadura}/sincronizar',[FechaduraController::class, 'sincronizar']);

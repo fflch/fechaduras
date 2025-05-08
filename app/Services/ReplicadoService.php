@@ -2,16 +2,17 @@
 
 namespace App\Services;
 
+use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
 use App\Services\LockSessionService;
 
 class ReplicadoService{
 
-    public static function cadastroUsuario($ip, array $faltantes){
+    public static function cadastroUsuario(array $faltantes, Fechadura $fechadura){
         
-        $sessao = LockSessionService::conexao($ip);
+        $sessao = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
 
-        $url = "http://" . $ip . "/create_objects.fcgi?session=" . $sessao;
+        $url = "http://" . $fechadura->ip . "/create_objects.fcgi?session=" . $sessao;
         
         foreach($faltantes as $codpes => $faltante){
             $response = Http::asJson()->post($url,[
@@ -27,15 +28,15 @@ class ReplicadoService{
                 ]
             ]);
             if($response->successful()){
-                FotoUpdateService::updateFoto($ip, $codpes);
+                FotoUpdateService::updateFoto($fechadura, $codpes);
             }
         }
         return $response;
     }
-    public static function updateUsuario($ip, array $usuarios){
-        $sessao = LockSessionService::conexao($ip);
+    public static function updateUsuario(array $usuarios, Fechadura $fechadura){
+        $sessao = LockSessionService::conexao($fechadura->ip, $fechadura->usuario,$fechadura->senha);
 
-        $url = "http://". $ip ."/modify_objects.fcgi?session=".$sessao;
+        $url = "http://". $fechadura->ip ."/modify_objects.fcgi?session=".$sessao;
         
         foreach($usuarios as $codpes => $usuario){
             $response = Http::asJson()->post($url, [
@@ -52,7 +53,7 @@ class ReplicadoService{
                 ]
             ]);
             if($response->successful()){
-                FotoUpdateService::updateFoto($ip, $codpes);
+                FotoUpdateService::updateFoto($fechadura, $codpes);
             }
         }
         return $response;
