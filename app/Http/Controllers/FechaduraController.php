@@ -90,17 +90,7 @@ class FechaduraController extends Controller
 
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
     public function sincronizar(Request $request, Fechadura $fechadura){
-        //caso haja alguem diferente de fora do setor, adicionar um input com codpes para inserir "manualmente" na fechaduara
-        
-        //seria melhor jogar o login e o retorno dos usuarios numa Service?
-        $ip = '10.84.0.62';
-        $session = LockSessionService::conexao($ip, $fechadura->usuario, $fechadura->senha);
-        $route = 'http://' . $ip . '/load_objects.fcgi?session=' . $session;
-        $response = Http::post($route, [
-            "object" => "users"
-        ]);
-
-        $usuariosFechadura = $response->json()['users'] ?? [];
+        $usuariosFechadura = $this->show($fechadura)->usuarios;
         $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
         //$usuariosReplicado = User::all()->toArray(); //somente para melhor desempenho
 
@@ -119,10 +109,14 @@ class FechaduraController extends Controller
         
         $faltantes = array_diff_key($replicadoId, $fechaduraReg); // preferência pela matrícula
         
+        $dadosFechadura = [
+            'fechaduraId' => $fechaduraId,
+            'fechaduraReg' => $fechaduraReg,
+        ];
+        //1. verifica o usuário possui número de matrícula
         if(!empty($faltantes)){
-            $response = ReplicadoService::cadastroUsuario($faltantes, $fechadura);
+            $response = ReplicadoService::cadastroUsuario($faltantes, $fechadura, $dadosFechadura);
         }
-        
         $response = ReplicadoService::updateUsuario($replicadoId, $fechadura);
         
         return back()->with('success','Dados sincronizados');
