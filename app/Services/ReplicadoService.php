@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
 use App\Services\LockSessionService;
+use App\Services\GroupService;
 
 class ReplicadoService{
 
@@ -37,6 +38,7 @@ class ReplicadoService{
                 ]);
                 if($response->successful()){
                     FotoUpdateService::updateFoto($fechadura, $codpes);
+                    //GroupService::createUserGroups($fechadura, $codpes, $faltantes); //verificar depois
                 }
             }
         }
@@ -47,7 +49,6 @@ class ReplicadoService{
         $sessao = LockSessionService::conexao($fechadura->ip, $fechadura->usuario,$fechadura->senha);
 
         $url = "http://". $fechadura->ip ."/modify_objects.fcgi?session=".$sessao;
-        
         foreach($usuarios as $codpes => $usuario){
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
@@ -64,6 +65,7 @@ class ReplicadoService{
             ]);
             if($response->successful()){
                 FotoUpdateService::updateFoto($fechadura, $codpes);
+                GroupService::createUserGroups($fechadura, $codpes, $usuarios);
             }
         }
         return $response;
