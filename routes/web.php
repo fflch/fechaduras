@@ -13,4 +13,4 @@ Route::put('/fechaduras/{fechadura}',[FechaduraController::class, 'update']);
 Route::delete('/fechaduras/{fechadura}',[FechaduraController::class, 'destroy']);
 
 Route::post('/fotos', [FechaduraController::class, 'fotos']);
-Route::post('/sincronizar',[FechaduraController::class, 'sincronizar']);
+Route::post('/fechaduras/{fechadura}/sincronizar',[FechaduraController::class, 'sincronizar']);

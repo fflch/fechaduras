@@ -24,7 +24,10 @@
         <a href="/fechaduras/{{ $fechadura->id }}/edit">Editar</a> |
         <a href="/fechaduras">Voltar para lista</a>
     </div>
-        
+    <form method="post" action="/fechaduras/{{$fechadura->id}}/sincronizar">
+        @csrf
+        <button>Sincronizar dados</button>
+    </form>
     <h3>Usuários Cadastrados na Fechadura</h3>
     <table>
         <thead>
