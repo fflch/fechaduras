@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\FotoUpdateService;
 use App\Models\Fechadura;
+use App\Services\ApiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
@@ -12,6 +13,7 @@ use Uspdev\Replicado\Pessoa;
 use Uspdev\Wsfoto;
 use App\Services\LockSessionService;
 use App\Services\ReplicadoService;
+use App\Http\Controllers\UsuariosFechaduraController;
 
 class FechaduraController extends Controller
 {
@@ -90,8 +92,9 @@ class FechaduraController extends Controller
 
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
     public function sincronizar(Request $request, Fechadura $fechadura){
-        $usuariosFechadura = $this->show($fechadura)->usuarios;
-        $usuariosReplicado = User::pessoa(env('REPLICADO_CODUNDCLG'));
+        $apiService = new ApiService($fechadura);
+        $usuariosFechadura = $apiService->loadUsers();
+        $usuariosReplicado = ReplicadoService::pessoa();
         //$usuariosReplicado = User::all()->toArray(); //somente para melhor desempenho
 
         $fechaduraId = [];
@@ -101,23 +104,17 @@ class FechaduraController extends Controller
             $fechaduraId[$user['id']] = $user; 
             $fechaduraReg[$user['registration']] = $user;
         }
+        $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg); // preferência pela matrícula
         
-        $replicadoId = [];
-        foreach($usuariosReplicado as $fflch){
-            $replicadoId[$fflch['codpes']] = $fflch; //pega todos os usuários do replicado pelo codpes
-        }
-        
-        $faltantes = array_diff_key($replicadoId, $fechaduraReg); // preferência pela matrícula
-        
-        $dadosFechadura = [
+        $dadosFechadura = [ //mudar para dadosUsuario
             'fechaduraId' => $fechaduraId,
             'fechaduraReg' => $fechaduraReg,
         ];
         //1. verifica o usuário possui número de matrícula
         if(!empty($faltantes)){
-            $response = ReplicadoService::cadastroUsuario($faltantes, $fechadura, $dadosFechadura);
+            $response = UsuariosFechaduraController::store($faltantes, $fechadura, $dadosFechadura);
         }
-        $response = ReplicadoService::updateUsuario($replicadoId, $fechadura);
+        $response = UsuariosFechaduraController::update($usuariosReplicado, $fechadura);
         
         return back()->with('success','Dados sincronizados');
     }
