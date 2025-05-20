@@ -1,41 +1,51 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Cadastrar Nova Fechadura</title>
-</head>
-<body>
-    <h1>Nova Fechadura</h1>
+@extends("main")
+@section("content")
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h3>Nova Fechadura</h3>
+        <a href="/fechaduras" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Voltar
+        </a>
+    </div>
     
-    <a href="/fechaduras">← Voltar</a>
+    <div class="card-body">
+        @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+        @endif
 
-    <form method="POST" action="/fechaduras" style="margin-top: 20px;">
-        @csrf
-        
-        <div style="margin: 10px 0;">
-            <label>Local: 
-                <input type="text" name="local" required style="width: 300px;">
-            </label>
-        </div>
-        
-        <div style="margin: 10px 0;">
-            <label>IP: 
-                <input type="text" name="ip" required placeholder="Ex: 10.172.2.143">
-            </label>
-        </div>
-        
-        <div style="margin: 10px 0;">
-            <label>Usuário API: 
-                <input type="text" name="usuario" required placeholder="Ex: admin">
-            </label>
-        </div>
-        
-        <div style="margin: 10px 0;">
-            <label>Senha API: 
-                <input type="password" name="senha">
-            </label>
-        </div>
-        
-        <button type="submit" style="margin-top: 10px;">Salvar</button>
-    </form>
-</body>
-</html>
+        <form method="POST" action="/fechaduras">
+            @csrf
+            
+            <div class="mb-3">
+                <label class="form-label">Local</label>
+                <input type="text" class="form-control" name="local" value="{{ old('local') }}" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">IP</label>
+                <input type="text" class="form-control" name="ip" value="{{ old('ip') }}" placeholder="Ex: 10.172.2.143" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Usuário API</label>
+                <input type="text" class="form-control" name="usuario" value="{{ old('usuario') }}" placeholder="Ex: admin" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Senha API</label>
+                <input type="password" class="form-control" name="senha" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Salvar
+            </button>
+        </form>
+    </div>
+</div>
+@endsection

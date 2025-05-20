@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('fechaduras', function (Blueprint $table) {
+        Schema::create('acessos', function (Blueprint $table) {
             $table->id();
-            $table->string('local');
-            $table->string('ip')->unique();
-            $table->string('usuario');
-            $table->string('senha');
-            $table->string('observacao')->nullable();
+            $table->foreignId('fechadura_id')->constrained()->onDelete('cascade');
+            $table->integer('codpes');   // Nº USP
+            $table->timestamp('datahora'); 
+            $table->tinyInteger('event');
+            $table->integer('log_id_externo');
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('fechaduras');
+        Schema::dropIfExists('acessos');
     }
 };
