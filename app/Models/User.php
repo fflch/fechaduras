@@ -48,19 +48,4 @@ class User extends Authenticatable
         ];
     }
 
-    public static function pessoa(int $codundclg){
-        $query = "SELECT p.nompes, p.codpes, a.nompesttd
-        FROM LOCALIZAPESSOA p
-        INNER JOIN PESSOA a
-        ON a.codpes = p.codpes
-        WHERE p.codset = 606
-        AND p.sitatl = 'A'"; //pegar so quem esta ativo
-    
-//atualizar o replicado com a fechaduara (ao clicar o botao)
-
-        $result = DB::fetchAll($query);
-        // 
-        return $result;
-    }
-
 }

@@ -16,4 +16,4 @@ Route::get('/fechaduras/{fechadura}/logs', [FechaduraController::class, 'logs'])
 Route::post('/fechaduras/{fechadura}/logs', [FechaduraController::class, 'updateLogs']);
 
 Route::post('/fotos', [FechaduraController::class, 'fotos']);
-Route::post('/sincronizar',[FechaduraController::class, 'sincronizar']);
+Route::post('/fechaduras/{fechadura}/sincronizar',[FechaduraController::class, 'sincronizar']);
