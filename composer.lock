@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e85b217bcfc3d0d2ed93998c7b1ac05a",
+    "content-hash": "63e652c6ef5213dbbf08f8106e8d6219",
     "packages": [
         {
             "name": "brick/math",
@@ -2111,16 +2111,16 @@
         },
         {
             "name": "nesbot/carbon",
-            "version": "3.9.0",
+            "version": "3.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CarbonPHP/carbon.git",
-                "reference": "6d16a8a015166fe54e22c042e0805c5363aef50d"
+                "reference": "ced71f79398ece168e24f7f7710462f462310d4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CarbonPHP/carbon/zipball/6d16a8a015166fe54e22c042e0805c5363aef50d",
-                "reference": "6d16a8a015166fe54e22c042e0805c5363aef50d",
+                "url": "https://api.github.com/repos/CarbonPHP/carbon/zipball/ced71f79398ece168e24f7f7710462f462310d4d",
+                "reference": "ced71f79398ece168e24f7f7710462f462310d4d",
                 "shasum": ""
             },
             "require": {
@@ -2213,7 +2213,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-03-27T12:57:33+00:00"
+            "time": "2025-05-01T19:51:51+00:00"
         },
         {
             "name": "nette/schema",
@@ -5611,6 +5611,56 @@
             "time": "2021-04-07T23:14:52+00:00"
         },
         {
+            "name": "uspdev/laravel-usp-theme",
+            "version": "2.8.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/uspdev/laravel-usp-theme.git",
+                "reference": "ee57f53cbf3fc95ad0ed68b5ab6d31cc64cd604e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/uspdev/laravel-usp-theme/zipball/ee57f53cbf3fc95ad0ed68b5ab6d31cc64cd604e",
+                "reference": "ee57f53cbf3fc95ad0ed68b5ab6d31cc64cd604e",
+                "shasum": ""
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "aliases": {
+                        "UspTheme": "Uspdev\\UspTheme\\Facades\\UspTheme"
+                    },
+                    "providers": [
+                        "Uspdev\\UspTheme\\ServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/helpers.php"
+                ],
+                "psr-4": {
+                    "Uspdev\\UspTheme\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Thiago Gomes Verissimo",
+                    "email": "thiago.verissimo@usp.br"
+                }
+            ],
+            "description": "usp theme for laravel",
+            "support": {
+                "issues": "https://github.com/uspdev/laravel-usp-theme/issues",
+                "source": "https://github.com/uspdev/laravel-usp-theme/tree/2.8.14"
+            },
+            "time": "2025-03-27T13:26:35+00:00"
+        },
+        {
             "name": "uspdev/replicado",
             "version": "1.25.4",
             "source": {
@@ -8195,12 +8245,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }
