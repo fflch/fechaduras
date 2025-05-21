@@ -157,9 +157,11 @@ class FechaduraController extends Controller
     public function sincronizar(Request $request, Fechadura $fechadura){
         $apiService = new ApiService($fechadura);
         $usuariosFechadura = $apiService->loadUsers();
-        $usuariosReplicado = ReplicadoService::pessoa();
-        //$usuariosReplicado = User::all()->toArray(); //somente para melhor desempenho
-
+        if(empty($request->setores)){
+            return back()->with('error','Por favor, selecione um setor.');
+        }
+        $usuariosReplicado = ReplicadoService::pessoa($request->setores);
+        
         $fechaduraId = [];
         $fechaduraReg = [];
         foreach($usuariosFechadura as $user){
@@ -167,8 +169,8 @@ class FechaduraController extends Controller
             $fechaduraId[$user['id']] = $user; 
             $fechaduraReg[$user['registration']] = $user;
         }
-        $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg); // preferência pela matrícula
         
+        $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg); // preferência pela matrícula
         $dadosFechadura = [ //mudar para dadosUsuario
             'fechaduraId' => $fechaduraId,
             'fechaduraReg' => $fechaduraReg,
