@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Services;
+namespace App\Actions;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Session;
 
-class LockSessionService
+class SessionAction
 {
     // Obtém ou cria uma sessão ativa com a fechadura
     public static function conexao($ip, $usuario, $senha){

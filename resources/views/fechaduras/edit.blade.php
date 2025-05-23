@@ -40,7 +40,7 @@
             
             <div class="mb-3">
                 <label class="form-label">Senha API</label>
-                <input type="password" class="form-control" name="senha" placeholder="Insira nova senha (deixar em branco para manter antiga)">
+                <input type="password" class="form-control" name="senha" value="{{ old('senha', $fechadura->senha) }}" required>
             </div>
             
             <button type="submit" class="btn btn-primary">

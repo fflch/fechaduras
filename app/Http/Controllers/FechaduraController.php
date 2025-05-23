@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\SessionAction;
+use App\Actions\LogsAction; 
+use App\Actions\SyncUsersAction;
 use App\Models\User;
 use App\Services\FotoUpdateService;
 use App\Models\Fechadura;
@@ -13,7 +16,6 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Uspdev\Replicado\Pessoa;
 use Uspdev\Wsfoto;
-use App\Services\LockSessionService;
 use App\Services\AccessLogService;
 use App\Http\Requests\FechaduraRequest;
 use App\Services\ReplicadoService;
@@ -53,7 +55,7 @@ class FechaduraController extends Controller
     // Mostra uma fechadura específica e lista os usuários cadastrados nela
     public function show(Fechadura $fechadura) {
         // 1 - Autenticação na API da fechadura
-        $session = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
+        $session = SessionAction::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
         
         // 2 - Carregamento dos usuários cadastrados na fechadura
         $route = 'http://' . $fechadura->ip . '/load_objects.fcgi?session=' . $session;
@@ -115,70 +117,20 @@ class FechaduraController extends Controller
 
     public function updateLogs(Fechadura $fechadura)
     {
-        $session = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
+        $count = LogsAction::update($fechadura);
         
-        if (!$session) {
+        if($count === false) {
             return back()->with('error', 'Falha ao conectar com a fechadura');
         }
-
-        $route = 'http://' . $fechadura->ip . '/load_objects.fcgi?session=' . $session;
-        $response = Http::post($route, [
-            "object" => "access_logs",
-            "limit" => 300,
-            "order" => ["descending", "time"]
-        ]);
-
-        $logs = $response->json()['access_logs'] ?? [];
         
-        $count = 0;
-        foreach ($logs as $log) {
-            // Pega o user_id ou 0 se não existir (acesso não identificado)
-            $codpes = $log['user_id'] ?? 0;
-            
-            Acesso::updateOrCreate(
-                [
-                    'log_id_externo' => $log['id']
-                ],
-                [
-                    'event' => $log['event'],
-                    'fechadura_id' => $fechadura->id,
-                    'codpes' => $codpes,
-                    'datahora' => date('Y-m-d H:i:s', $log['time'])
-                ]
-            );
-            $count++;
-        }
-
         return back()->with('success', "{$count} logs atualizados");
     }
 
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
 
-    public function sincronizar(Request $request, Fechadura $fechadura){
-        $apiService = new ApiService($fechadura);
-        $usuariosFechadura = $apiService->loadUsers();
-        $usuariosReplicado = ReplicadoService::pessoa();
-        //$usuariosReplicado = User::all()->toArray(); //somente para melhor desempenho
-
-        $fechaduraId = [];
-        $fechaduraReg = [];
-        foreach($usuariosFechadura as $user){
-            //pega todos os usuários da fechadura pela matrícula ou id (este número é o codpes).
-            $fechaduraId[$user['id']] = $user; 
-            $fechaduraReg[$user['registration']] = $user;
-        }
-        $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg); // preferência pela matrícula
-        
-        $dadosFechadura = [ //mudar para dadosUsuario
-            'fechaduraId' => $fechaduraId,
-            'fechaduraReg' => $fechaduraReg,
-        ];
-        //1. verifica o usuário possui número de matrícula
-        if(!empty($faltantes)){
-            $response = UsuariosFechaduraController::store($faltantes, $fechadura, $dadosFechadura);
-        }
-        $response = UsuariosFechaduraController::update($usuariosReplicado, $fechadura);
-        
+    public function sincronizar(Request $request, Fechadura $fechadura)
+    {
+        SyncUsersAction::execute($fechadura);
         return back()->with('success','Dados sincronizados');
     }
 }
