@@ -17,3 +17,8 @@ Route::post('/fechaduras/{fechadura}/logs', [FechaduraController::class, 'update
 
 Route::post('/fotos', [FechaduraController::class, 'fotos']);
 Route::post('/fechaduras/{fechadura}/sincronizar',[FechaduraController::class, 'sincronizar']);
+Route::post('/fechaduras/{fechadura}/remove_user/{user}',[FechaduraController::class, 'remove_user']);
+
+Route::get('/', function(){
+    return redirect('/fechaduras');
+});

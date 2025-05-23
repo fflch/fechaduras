@@ -16,36 +16,13 @@
                     de acesso</a>
             </div>
         </div>
-
     </div>
+    <form method="post" action="/fechaduras/{{ $fechadura->id }}/sincronizar">
+        @csrf
+        @include('partials.form')
+    </form>
 
-    @if(session('success'))
-    <div class="alert alert-success" role="alert">
-        {{ session('success') }}
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="alert alert-danger" role="alert">
-        {{ session('error') }}
-    </div>
-    @endif
-
-    <div class="mt-2">
-        <form method="post" action="/fechaduras/{{ $fechadura->id }}/sincronizar">
-            @csrf
-            <label for="setor" class="form-label">Escolha um setor para sincronização</label>
-            <select name="setores[]" class="select2 form-control" multiple="multiple">
-                @foreach (\App\Services\ReplicadoService::retornaSetores() as $setor)
-                    <option value="{{ $setor['codset'] }}">
-                        {{ $setor['nomabvset'] }} - {{ $setor['nomset'] }}</option>
-                @endforeach
-            </select>
-            <button class="btn btn-primary" style="margin-top:5px;">
-                <i class="fas fa-sync-alt"></i> Sincronizar dados
-            </button>
-        </form>
-    </div>
+    @include('partials.usuarios')
 
     <div class="card mt-4">
         <div class="card-header">
@@ -75,10 +52,18 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).ready(function() {
-            $('.form-control').select2();
+        $(document).ready(function(){
+            $('#btn_sync').click(function(){
+                let button = $(this);
+                setTimeout(function(){
+                    button.prop('disabled', true);
+                    button.text('Sincronizando...');
+                }, 5);
+            });
         });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection

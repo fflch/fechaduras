@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateSetorAction;
 use App\Models\User;
 use App\Services\FotoUpdateService;
 use App\Models\Fechadura;
@@ -18,6 +19,9 @@ use App\Services\AccessLogService;
 use App\Http\Requests\FechaduraRequest;
 use App\Services\ReplicadoService;
 use App\Http\Controllers\UsuariosFechaduraController;
+use App\Models\Setor;
+use App\Services\UsuarioService;
+use Uspdev\Replicado\Estrutura;
 
 class FechaduraController extends Controller
 {
@@ -153,15 +157,44 @@ class FechaduraController extends Controller
     }
 
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
-
     public function sincronizar(Request $request, Fechadura $fechadura){
         $apiService = new ApiService($fechadura);
         $usuariosFechadura = $apiService->loadUsers();
+        $usuariosReplicado = ReplicadoService::pessoa($request->setores); 
+
+        $fechadura->setores()->detach();
         if(empty($request->setores)){
-            return back()->with('error','Por favor, selecione um setor.');
+            request()->session()->flash('alert-success','Setores atualizados!');
+            return back();
         }
-        $usuariosReplicado = ReplicadoService::pessoa($request->setores);
-        
+        foreach($request->setores as $codset){
+            $createSetor = new CreateSetorAction($codset, $fechadura);
+            $setor = $createSetor->execute();
+        }
+
+        $usuariosRequest = explode(',', $request->codpes);
+        $requestsNumericos = array_filter($usuariosRequest, 'is_numeric');
+
+        $userRequest = [];
+        foreach($requestsNumericos as $usuarioValido){
+            $resultado = UsuarioService::verifyAndCreateUsers($usuarioValido, $fechadura);
+            if($resultado instanceof \Illuminate\Http\RedirectResponse){
+                return $resultado;
+            }
+        }
+
+        $userRequest = array_filter($userRequest, function($value) {
+            return !empty($value); //remove os valores vazios (possíveis vírgulas acidentais)
+        });
+
+        if($userRequest){
+            $dadosPessoa = [];
+            foreach($userRequest as $codpes => $user){
+                $dadosPessoa[$codpes] = Pessoa::dump($codpes);
+            }
+            $merge = array_replace($usuariosReplicado, $dadosPessoa);
+        }
+
         $fechaduraId = [];
         $fechaduraReg = [];
         foreach($usuariosFechadura as $user){
@@ -170,17 +203,20 @@ class FechaduraController extends Controller
             $fechaduraReg[$user['registration']] = $user;
         }
         
-        $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg); // preferência pela matrícula
-        $dadosFechadura = [ //mudar para dadosUsuario
+        $faltantes = array_diff_key($merge ?? $usuariosReplicado, $fechaduraReg); // preferência pela matrícula
+
+        $dadosFechadura = [
             'fechaduraId' => $fechaduraId,
             'fechaduraReg' => $fechaduraReg,
         ];
-        //1. verifica o usuário possui número de matrícula
-        if(!empty($faltantes)){
+
+        //1. verifica se o usuário possui número de matrícula
+        if(!empty($faltantes)){ //ISSUE: realiza somente o cadastro, nao faz atualização
+            dd('cadastrar', $faltantes);
             $response = UsuariosFechaduraController::store($faltantes, $fechadura, $dadosFechadura);
         }
         $response = UsuariosFechaduraController::update($usuariosReplicado, $fechadura);
-        
-        return back()->with('success','Dados sincronizados');
+        request()->session()->flash('alert-success','Dados sincronizados!');
+        return back();
     }
 }

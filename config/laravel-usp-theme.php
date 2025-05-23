@@ -38,7 +38,7 @@ $submenu2 = [
 $menu = [
     [
         'text' => '<i class="fas fa-home"></i> Home',
-        'url' => 'home',
+        'url' => 'fechaduras',
     ],
     [
         # este item de menu será substituido no momento da renderização
@@ -100,8 +100,8 @@ return [
 
     # login e logout
     'logout_method' => 'POST',
-    'logout_url' => 'logout',
-    'login_url' => 'login',
+    'logout_url' => config('app.url') . 'logout',
+    'login_url' => config('app.url') . '/login',
 
     # menus
     'menu' => $menu,

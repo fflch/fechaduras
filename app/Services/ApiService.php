@@ -46,7 +46,7 @@ class ApiService
             : $dadosFechadura['fechaduraId'][$codpes]['id'] ?? '';
 
             if(!empty($faltantes[$codpes]) && $faltantes[$codpes]['codpes'] != $codpesFaltante){
-                dd('cadastrar');
+                
                 $response = Http::asJson()->post($url, [
                     'object' => 'users',
                     'values' => [

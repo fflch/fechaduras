@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Uspdev\Replicado\DB;
+use Spatie\Permission\Traits\HasRoles;
+use Uspdev\SenhaunicaSocialite\Traits\HasSenhaunica;
+use App\Models\Setor;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
+    use HasRoles;
+    use HasSenhaunica;
+    use \Spatie\Permission\Traits\HasRoles;
+    use \Uspdev\SenhaunicaSocialite\Traits\HasSenhaunica;
 
     /**
      * The attributes that are mass assignable.
@@ -48,4 +54,8 @@ class User extends Authenticatable
         ];
     }
 
+    public function setor()
+    {
+        return $this->belongsTo(Setor::class);
+    }
 }
