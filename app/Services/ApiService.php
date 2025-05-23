@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Actions\CreateUserAction;
-use App\Services\LockSessionService;
+use App\Actions\SessionAction;
 use App\Actions\CreateUserGroupAction;
 use App\Actions\GroupAction;
 use App\Actions\UpdateUserAction;
@@ -21,7 +21,7 @@ class ApiService
     public function __construct($fechadura)
     {
         $this->fechadura = $fechadura;
-        $this->sessao = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
+        $this->sessao = SessionAction::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
     }
 
     public function loadUsers(){
@@ -46,7 +46,7 @@ class ApiService
             : $dadosFechadura['fechaduraId'][$codpes]['id'] ?? '';
 
             if(!empty($faltantes[$codpes]) && $faltantes[$codpes]['codpes'] != $codpesFaltante){
-                dd('cadastrar');
+                //dd('cadastrar');
                 $response = Http::asJson()->post($url, [
                     'object' => 'users',
                     'values' => [
