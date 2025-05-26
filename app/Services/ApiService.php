@@ -38,7 +38,7 @@ class ApiService
             2. Verifica se o usuário existe na fechadura pela matrícula ou id (este número é o codpes).
             caso o usuario não exista, pois não há ID nem MATRÍCULA, será feito o cadastro
             */
-            $codpesFaltante = 
+            $codpesFaltante =
             isset($dadosFechadura['fechaduraReg'][$codpes]['registration'])
             ? $dadosFechadura['fechaduraReg'][$codpes]['registration']
             : $dadosFechadura['fechaduraId'][$codpes]['id'] ?? '';
@@ -119,17 +119,16 @@ class ApiService
         ]);
 
         $logs = $response->json()['access_logs'] ?? [];
-        
+
         $count = 0;
         foreach ($logs as $log) {
-            $codpes = $log['user_id'] ?? 0;
-            
+
             Acesso::updateOrCreate(
                 ['log_id_externo' => $log['id']],
                 [
                     'event' => $log['event'],
                     'fechadura_id' => $this->fechadura->id,
-                    'codpes' => $codpes,
+                    'codpes' => $log['user_id'] ?? 0,
                     'datahora' => date('Y-m-d H:i:s', $log['time'])
                 ]
             );
@@ -138,7 +137,7 @@ class ApiService
 
         return $count;
     }
-    
+
     // Sincroniza usuários entre o Replicado e fechadura
     public function syncUsers()
     {
@@ -147,14 +146,14 @@ class ApiService
 
         $fechaduraId = [];
         $fechaduraReg = [];
-        
+
         foreach($usuariosFechadura as $user) {
-            $fechaduraId[$user['id']] = $user; 
+            $fechaduraId[$user['id']] = $user;
             $fechaduraReg[$user['registration']] = $user;
         }
-        
+
         $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg);
-        
+
         $dadosFechadura = [
             'fechaduraId' => $fechaduraId,
             'fechaduraReg' => $fechaduraReg,
@@ -163,9 +162,9 @@ class ApiService
         if(!empty($faltantes)) {
             $this->createUsers($faltantes, $dadosFechadura);
         }
-        
+
         $this->updateUsers($usuariosReplicado);
-        
+
         return true;
     }
 
