@@ -8,7 +8,7 @@ use App\Services\LockSessionService;
 use Uspdev\Wsfoto;
 
 class FotoUpdateService {
-//mudar pra action?
+    
     public static function updateFoto(Fechadura $fechadura, $codpes){
 
         $sessao = LockSessionService::conexao($fechadura->ip,$fechadura->usuario, $fechadura->senha);

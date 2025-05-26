@@ -1,9 +1,20 @@
-@extends('main')
-@section('content')
-    <div class="card">
-        <div class="card-header">
-            <h2>{{ $fechadura->local }}</h2>
-        </div>
+@extends("main")
+@section("content")
+<form method="POST" action="/fechaduras/{{$fechadura->id}}/sincronizar">
+    @csrf
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-sync-alt"></i> Sincronizar
+    </button>
+</form>
+
+<div class="card">
+    <div class="card-header">
+        <h2>{{ $fechadura->local }}</h2>
+    </div>
+    
+    <div class="card-body">
+        <p><strong>IP:</strong> {{ $fechadura->ip }}</p>
+        <p><strong>Usuário API:</strong> {{ $fechadura->usuario }}</p>
 
         <div class="card-body">
             <p><strong>IP:</strong> {{ $fechadura->ip }}</p>

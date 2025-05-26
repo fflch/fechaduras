@@ -9,8 +9,7 @@ class Acesso extends Model
     protected $fillable = ['fechadura_id', 'datahora', 'codpes', 'event', 'log_id_externo'];
     
     protected $casts = [
-        'datahora' => 'datetime',
-        'acesso' => 'boolean'
+        'datahora' => 'datetime'
     ];
     
     public function fechadura() {

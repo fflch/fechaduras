@@ -57,7 +57,7 @@
                                 @else
                                     <span class="badge bg-danger">
                                         Negado                
-                                            ({{ $this->getEventDescription($acesso->event) }})                                  
+                                            ({{ $acesso->event }})                                 
                                     </span>
                                 @endif
                             </td>
