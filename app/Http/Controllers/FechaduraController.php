@@ -8,6 +8,8 @@ use App\Models\Acesso;
 use App\Services\ApiService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
+use App\Models\User;
+use Illuminate\Http\Request;
 
 class FechaduraController extends Controller
 {
@@ -116,13 +118,19 @@ class FechaduraController extends Controller
         return back()->with('success', "{$count} logs atualizados");
     }
 
+    public function remove_user(Fechadura $fechadura, User $user){
+        $fechadura->usuarios()->detach($user->id);
+        request()->session()->flash('alert-warning', "Usuário {$user->name} removido com sucesso!");
+        return back();
+    }
+
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
     //Sincroniza replicado com fechadura
-    public function sincronizar(Fechadura $fechadura)
+    public function sincronizar(Request $request, Fechadura $fechadura)
     {
         $apiService = new ApiService($fechadura);
-        $apiService->syncUsers();
-
-        return back()->with('success','Dados sincronizados');
+        $apiService->syncUsers($request);
+        request()->session()->flash('alert-success','Dados sincronizados!');
+        return back();
     }
 }

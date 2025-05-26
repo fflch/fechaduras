@@ -14,11 +14,15 @@ class UsuarioService
     public static function verifyAndCreateUsers($usuarioValido, $fechadura){
         $user = User::firstWhere('codpes',$usuarioValido);
         if(empty($user)){
-            $user = User::findOrCreateFromReplicado($usuarioValido);
+            $dadosPessoa = Pessoa::dump($usuarioValido);
+            $user = new User; //instanciando o model pq o metodo findOrCreate do replicado precisa da table "permissions"
+            $user->name = $dadosPessoa['nompesttd'] ?? $dadosPessoa['nompes'];
+            $user->codpes = $usuarioValido;
+            $user->save();
         }
      
         $userRequest[trim($usuarioValido)] = trim($usuarioValido); //transforma o codpes em index
-
+        
         $codpesValido = Pessoa::dump($usuarioValido);
         if(!$codpesValido){
             request()->session()->flash('alert-danger', 'Algum número USP pode ter sido digitado incorretamente! Verifique novamente.');
@@ -31,5 +35,6 @@ class UsuarioService
             request()->session()->flash('alert-danger', 'Usuário já está cadastrado!');
             return redirect()->back();
         }
+        return $userRequest;
     }
 }

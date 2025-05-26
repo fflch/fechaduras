@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Actions\CreateSetorAction;
 use App\Services\LockSessionService;
 use \App\Models\Acesso;
 use App\Actions\GroupAction;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
+use Uspdev\Replicado\Pessoa;
 
 class ApiService
 {
@@ -139,11 +142,42 @@ class ApiService
     }
 
     // Sincroniza usuários entre o Replicado e fechadura
-    public function syncUsers()
+    public function syncUsers($request)
     {
         $usuariosFechadura = $this->loadUsers();
-        $usuariosReplicado = ReplicadoService::pessoa();
+        $usuariosReplicado = ReplicadoService::pessoa($request->setores);
+        //$usuariosReplicado = User::all()->keyBy('codpes')->toArray();
 
+        $this->fechadura->setores()->detach();
+        if(empty($request->setores)){
+            request()->session()->flash('alert-success','Setores atualizados');
+            return back();
+        }
+
+        foreach($request->setores as $codset){
+            $createSetor = new CreateSetorAction($codset, $this->fechadura);
+            $createSetor->execute();
+        }
+
+        $usuariosRequest = explode(',', $request->codpes);
+        $requestsNumericos = array_filter($usuariosRequest, 'is_numeric');
+
+        foreach($requestsNumericos as $usuarioValido){
+            $usuarioValido = UsuarioService::verifyAndCreateUsers($usuarioValido, $this->fechadura);
+            if($usuarioValido instanceof \Illuminate\Http\RedirectResponse){
+                return $usuarioValido;
+            }
+        }
+
+        //se houve inserção manual de codpes, busca no replicado pelos usuários que foram inseridos
+        //jogar para uma action?
+        if($requestsNumericos){
+            $dadosPessoa = [];
+            foreach($usuarioValido as $codpes => $user){
+                $dadosPessoa[$codpes] = Pessoa::dump($codpes);
+                $usuariosReplicado[$codpes] = $dadosPessoa[$codpes]; //tudo para indexar o codpes como chave do array
+            }
+        }
         $fechaduraId = [];
         $fechaduraReg = [];
 
