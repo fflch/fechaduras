@@ -1,5 +1,12 @@
 @extends("main")
 @section("content")
+<form method="POST" action="/fechaduras/{{$fechadura->id}}/sincronizar">
+    @csrf
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-sync-alt"></i> Sincronizar
+    </button>
+</form>
+
 <div class="card">
     <div class="card-header">
         <h2>{{ $fechadura->local }}</h2>
@@ -17,10 +24,6 @@
     </div>
 
 </div>
-    <form method="post" action="/fechaduras/{{$fechadura->id}}/sincronizar">
-        @csrf
-        <button>Sincronizar dados</button>
-    </form>
 
 <div class="card mt-4">
     <div class="card-header">
