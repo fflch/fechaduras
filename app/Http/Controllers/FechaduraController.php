@@ -2,9 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\SessionAction;
-use App\Actions\LogsAction; 
-use App\Actions\SyncUsersAction;
+use App\Services\LockSessionService;
 use App\Models\User;
 use App\Services\FotoUpdateService;
 use App\Models\Fechadura;
@@ -55,7 +53,7 @@ class FechaduraController extends Controller
     // Mostra uma fechadura específica e lista os usuários cadastrados nela
     public function show(Fechadura $fechadura) {
         // 1 - Autenticação na API da fechadura
-        $session = SessionAction::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
+        $session = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
         
         // 2 - Carregamento dos usuários cadastrados na fechadura
         $route = 'http://' . $fechadura->ip . '/load_objects.fcgi?session=' . $session;
@@ -115,9 +113,11 @@ class FechaduraController extends Controller
         ]);
     }
 
+    //Atualiza logs 
     public function updateLogs(Fechadura $fechadura)
     {
-        $count = LogsAction::update($fechadura);
+        $apiService = new ApiService($fechadura);
+        $count = $apiService->updateLogs();
         
         if($count === false) {
             return back()->with('error', 'Falha ao conectar com a fechadura');
@@ -127,10 +127,12 @@ class FechaduraController extends Controller
     }
 
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
-
+    //Sincroniza replicado com fechadura
     public function sincronizar(Request $request, Fechadura $fechadura)
     {
-        SyncUsersAction::execute($fechadura);
+        $apiService = new ApiService($fechadura);
+        $apiService->syncUsers();
+
         return back()->with('success','Dados sincronizados');
     }
 }

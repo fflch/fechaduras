@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use App\Actions\CreateUserAction;
-use App\Actions\SessionAction;
-use App\Actions\CreateUserGroupAction;
+use App\Services\LockSessionService;
+use \App\Models\Acesso;
 use App\Actions\GroupAction;
-use App\Actions\UpdateUserAction;
 use Illuminate\Support\Facades\Http;
 
 class ApiService
@@ -21,7 +19,7 @@ class ApiService
     public function __construct($fechadura)
     {
         $this->fechadura = $fechadura;
-        $this->sessao = SessionAction::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
+        $this->sessao = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
     }
 
     public function loadUsers(){
@@ -46,7 +44,6 @@ class ApiService
             : $dadosFechadura['fechaduraId'][$codpes]['id'] ?? '';
 
             if(!empty($faltantes[$codpes]) && $faltantes[$codpes]['codpes'] != $codpesFaltante){
-                //dd('cadastrar');
                 $response = Http::asJson()->post($url, [
                     'object' => 'users',
                     'values' => [
@@ -109,6 +106,67 @@ class ApiService
                 ]
             ]);
         }
+    }
+
+    // Atualiza os logs de acesso da fechadura no banco de dados local
+    public function updateLogs()
+    {
+        $route = 'http://' . $this->fechadura->ip . '/load_objects.fcgi?session=' . $this->sessao;
+        $response = Http::post($route, [
+            "object" => "access_logs",
+            "limit" => 300,
+            "order" => ["descending", "time"]
+        ]);
+
+        $logs = $response->json()['access_logs'] ?? [];
+        
+        $count = 0;
+        foreach ($logs as $log) {
+            $codpes = $log['user_id'] ?? 0;
+            
+            Acesso::updateOrCreate(
+                ['log_id_externo' => $log['id']],
+                [
+                    'event' => $log['event'],
+                    'fechadura_id' => $this->fechadura->id,
+                    'codpes' => $codpes,
+                    'datahora' => date('Y-m-d H:i:s', $log['time'])
+                ]
+            );
+            $count++;
+        }
+
+        return $count;
+    }
+    
+    // Sincroniza usuários entre o Replicado e fechadura
+    public function syncUsers()
+    {
+        $usuariosFechadura = $this->loadUsers();
+        $usuariosReplicado = ReplicadoService::pessoa();
+
+        $fechaduraId = [];
+        $fechaduraReg = [];
+        
+        foreach($usuariosFechadura as $user) {
+            $fechaduraId[$user['id']] = $user; 
+            $fechaduraReg[$user['registration']] = $user;
+        }
+        
+        $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg);
+        
+        $dadosFechadura = [
+            'fechaduraId' => $fechaduraId,
+            'fechaduraReg' => $fechaduraReg,
+        ];
+
+        if(!empty($faltantes)) {
+            $this->createUsers($faltantes, $dadosFechadura);
+        }
+        
+        $this->updateUsers($usuariosReplicado);
+        
+        return true;
     }
 
 }
