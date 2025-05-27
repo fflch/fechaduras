@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
-use App\Models\Log;
 use App\Services\ApiService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
