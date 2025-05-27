@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('acessos', function (Blueprint $table) {
+        Schema::create('logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('fechadura_id')->constrained()->onDelete('cascade');
             $table->integer('codpes');   // Nº USP
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('acessos');
+        Schema::dropIfExists('logs');
     }
 };
