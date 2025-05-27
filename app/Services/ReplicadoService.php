@@ -23,7 +23,7 @@ class ReplicadoService{
     public static function pessoa(array $codsets){
         $codset = implode(',', $codsets);
         
-        $query = "SELECT p.nompes, p.codpes, a.nompesttd
+        $query = "SELECT p.codpes, a.nompesttd
             FROM LOCALIZAPESSOA p
             INNER JOIN PESSOA a
             ON p.codpes = a.codpes
@@ -31,7 +31,7 @@ class ReplicadoService{
             AND p.sitatl = 'A'"; //pegar so quem esta ativo
             
         $pessoas = DB::fetchAll($query);
-        
+
         $replicadoId = [];
         foreach($pessoas as $pessoa){
             $replicadoId[$pessoa['codpes']] = $pessoa;

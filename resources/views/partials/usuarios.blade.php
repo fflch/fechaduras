@@ -11,7 +11,7 @@
             <ul class="list-group">
                 @foreach ($fechadura->usuarios as $usuario)
                     <li class="list-group-item">
-                        <form method="post" action="/fechaduras/{{ $fechadura->id }}/remove_user/{{ $usuario->id }}">
+                        <form method="post" action="/fechaduras/{{ $fechadura->id }}/delete_user/{{ $usuario->id }}">
                             {{ $usuario->codpes }} - {{ $usuario->name }}
                             @csrf
                             <button type="submit" class="btn btn-danger" onclick="return confirm('Tem Certeza?')">

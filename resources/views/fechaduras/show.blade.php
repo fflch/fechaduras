@@ -15,18 +15,23 @@
             <p><strong>Usuário API:</strong> {{ $fechadura->usuario }}</p>
 
             <div class="mt-4">
-                <a href="/fechaduras" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
-                <a href="/fechaduras/{{ $fechadura->id }}/edit" class="btn btn-warning">Editar</a>
-                <a href="/fechaduras/{{ $fechadura->id }}/logs" class="btn btn-info"><i class="fas fa-history"></i> Histórico
-                    de acesso</a>
+                <div class="row">
+                    <a href="/fechaduras" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+                    <a href="/fechaduras/{{ $fechadura->id }}/edit" class="btn btn-warning">Editar</a>
+                    <a href="/fechaduras/{{ $fechadura->id }}/logs" class="btn btn-info"><i class="fas fa-history"></i> Históricode acesso</a>
+                    <form method="post" action="/fechaduras/{{ $fechadura->id }}/sincronizar">
+                        @csrf
+                        <button type="submit" class="btn btn-primary" id="btn_sync">
+                            <i class="fas fa-sync-alt"></i> Sincronizar dados
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-    <form method="post" action="/fechaduras/{{ $fechadura->id }}/sincronizar">
-        @csrf
-        @include('partials.form')
-    </form>
 
+    @include('partials.form_setor')
+    @include('partials.form_user')
     @include('partials.usuarios')
 
     <div class="card mt-4">

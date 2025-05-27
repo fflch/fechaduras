@@ -6,7 +6,9 @@ use App\Actions\CreateSetorAction;
 use App\Services\LockSessionService;
 use \App\Models\Acesso;
 use App\Actions\GroupAction;
+use App\Models\Fechadura;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Uspdev\Replicado\Pessoa;
 
@@ -45,16 +47,18 @@ class ApiService
             isset($dadosFechadura['fechaduraReg'][$codpes]['registration'])
             ? $dadosFechadura['fechaduraReg'][$codpes]['registration']
             : $dadosFechadura['fechaduraId'][$codpes]['id'] ?? '';
-
+            
             if(!empty($faltantes[$codpes]) && $faltantes[$codpes]['codpes'] != $codpesFaltante){
+                
                 $response = Http::asJson()->post($url, [
                     'object' => 'users',
                     'values' => [
                         'id' => (int)$codpes,
-                        'name' => $usuario['nompesttd'] ?? $usuario['nompes'],
+                        'name' => $usuario['nompesttd'] ?? $usuario['name'],
                         'registration' => (string)$codpes,
                     ]
                 ]);
+                
                 if($response->successful()){
                     FotoUpdateService::updateFoto($this->fechadura, $codpes);
                     GroupAction::createUserGroups($this->fechadura, $codpes, $faltantes); //verificar depois
@@ -70,7 +74,7 @@ class ApiService
                 'object' => 'users',
                 'values' => [
                     'id' => (int)$codpes,
-                    'name' => $usuario['nompesttd'] ?? $usuario['nompes'],
+                    'name' => $usuario['nompesttd'] ?? $usuario['name'],
                     'registration' => (string)$codpes,
                 ],
                 'where' => [
@@ -111,6 +115,15 @@ class ApiService
         }
     }
 
+    public function loadLogs(){
+        // 2 - Carregamento dos usuários cadastrados na fechadura
+        $route = 'http://' . $this->fechadura->ip . '/load_objects.fcgi?session=' . $this->sessao;
+        $response = Http::post($route, [
+            "object" => "users"
+        ]);
+        return $response;
+    }
+
     // Atualiza os logs de acesso da fechadura no banco de dados local
     public function updateLogs()
     {
@@ -142,45 +155,22 @@ class ApiService
     }
 
     // Sincroniza usuários entre o Replicado e fechadura
-    public function syncUsers($request)
+    public function syncUsers($request, $fechadura)
     {
         $usuariosFechadura = $this->loadUsers();
-        $usuariosReplicado = ReplicadoService::pessoa($request->setores);
-        //$usuariosReplicado = User::all()->keyBy('codpes')->toArray();
+        $fechadura_setores = array_column($fechadura->setores->toArray(), 'codset');
+        $fechadura_usuarios = $fechadura->usuarios->keyBy('codpes')->toArray();
 
-        $this->fechadura->setores()->detach();
-        if(empty($request->setores)){
-            request()->session()->flash('alert-success','Setores atualizados');
-            return back();
+        if($fechadura_setores){
+            $usuariosReplicado = ReplicadoService::pessoa($fechadura_setores);
+            $usuariosReplicado += $fechadura_usuarios;
+        }else{
+            $usuariosReplicado = [];
+            $usuariosReplicado += $fechadura_usuarios;
         }
-
-        foreach($request->setores as $codset){
-            $createSetor = new CreateSetorAction($codset, $this->fechadura);
-            $createSetor->execute();
-        }
-
-        $usuariosRequest = explode(',', $request->codpes);
-        $requestsNumericos = array_filter($usuariosRequest, 'is_numeric');
-
-        foreach($requestsNumericos as $usuarioValido){
-            $usuarioValido = UsuarioService::verifyAndCreateUsers($usuarioValido, $this->fechadura);
-            if($usuarioValido instanceof \Illuminate\Http\RedirectResponse){
-                return $usuarioValido;
-            }
-        }
-
-        //se houve inserção manual de codpes, busca no replicado pelos usuários que foram inseridos
-        //jogar para uma action?
-        if($requestsNumericos){
-            $dadosPessoa = [];
-            foreach($usuarioValido as $codpes => $user){
-                $dadosPessoa[$codpes] = Pessoa::dump($codpes);
-                $usuariosReplicado[$codpes] = $dadosPessoa[$codpes]; //tudo para indexar o codpes como chave do array
-            }
-        }
+        
         $fechaduraId = [];
         $fechaduraReg = [];
-
         foreach($usuariosFechadura as $user) {
             $fechaduraId[$user['id']] = $user;
             $fechaduraReg[$user['registration']] = $user;
