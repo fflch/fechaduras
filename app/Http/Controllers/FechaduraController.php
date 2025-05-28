@@ -2,12 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateSetorAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
 use App\Models\Acesso;
 use App\Services\ApiService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
+use App\Models\User;
+use App\Services\UsuarioService;
+use Illuminate\Http\Request;
 
 class FechaduraController extends Controller
 {
@@ -116,13 +120,52 @@ class FechaduraController extends Controller
         return back()->with('success', "{$count} logs atualizados");
     }
 
+    public function createFechaduraUser(Fechadura $fechadura, Request $request){
+        if(!$request->codpes){
+            request()->session()->flash('alert-danger', 'Informe número USP!');
+            return back();
+        }
+        $usuariosRequest = explode(',', $request->codpes);
+        $requestsNumericos = array_filter($usuariosRequest, 'is_numeric');
+        foreach($requestsNumericos as $codpes){
+            $codpes = UsuarioService::verifyAndCreateUsers($codpes, $fechadura, $request);
+            if($codpes instanceof \Illuminate\Http\RedirectResponse){
+                return $codpes;
+            }
+        }
+        request()->session()->flash('alert-success', "Usuário(s) cadastrado(s) com sucesso!");
+        return back();
+    }
+
+    public function createFechaduraSetor(Fechadura $fechadura, Request $request){
+        $fechadura->setores()->detach(); //remove todos os setores antes de adicionar novos
+        if(empty($request->setores)){
+            $request->session()->flash('alert-success','Setores atualizados');
+            return back();
+        }
+        
+        foreach($request->setores as $codset){
+            $createSetor = new CreateSetorAction($codset, $fechadura);
+            $createSetor->execute();
+        }
+        request()->session()->flash('alert-success', 'Setores atualizados com sucesso!');
+        return back();
+    }
+
+    public function deleteUser(Fechadura $fechadura, User $user){
+        $fechadura->usuarios()->detach($user->id);
+        request()->session()->flash('alert-warning', "Usuário {$user->name} removido com sucesso!");
+        return back();
+    }
+
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
     //Sincroniza replicado com fechadura
-    public function sincronizar(Fechadura $fechadura)
+    public function sincronizar(Request $request, Fechadura $fechadura)
     {
         $apiService = new ApiService($fechadura);
-        $apiService->syncUsers();
-
-        return back()->with('success','Dados sincronizados');
+        $apiService->syncUsers($request, $fechadura);
+        //verificar se realmente houve um retorno de sucesso
+        request()->session()->flash('alert-success','Dados sincronizados!');
+        return back();
     }
 }
