@@ -32,10 +32,9 @@ class ReplicadoService{
             
         $pessoas = DB::fetchAll($query);
 
-        $replicadoId = [];
-        foreach($pessoas as $pessoa){
-            $replicadoId[$pessoa['codpes']] = $pessoa;
-        }
+        $collection = collect($pessoas);
+        $replicadoId = $collection->keyBy('codpes')->toArray();
+        
         return $replicadoId;
     }
 }

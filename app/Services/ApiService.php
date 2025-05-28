@@ -101,13 +101,13 @@ class ApiService
 
     public function createUserGroups($usuariosSemGrupo){
         $urlCreate = "http://" . $this->fechadura->ip . "/create_objects.fcgi?session=" . $this->sessao;
-        foreach($usuariosSemGrupo as $user){
+        foreach($usuariosSemGrupo as $codpes => $user){
             $response = Http::post($urlCreate, [
                 'object' => 'user_groups',
                 'fields' => ['user_id','group_id'],
                 'values' => [
                     [
-                        'user_id' => (int)$user['codpes'],
+                        'user_id' => (int)$codpes,
                         'group_id' => 1
                     ]
                 ]
@@ -157,10 +157,10 @@ class ApiService
     // Sincroniza usuários entre o Replicado e fechadura
     public function syncUsers($request, $fechadura)
     {
-        $usuariosFechadura = $this->loadUsers();
+        $loadUsers = $this->loadUsers();
         $fechadura_setores = array_column($fechadura->setores->toArray(), 'codset');
         $fechadura_usuarios = $fechadura->usuarios->keyBy('codpes')->toArray();
-
+        
         if($fechadura_setores){
             $usuariosReplicado = ReplicadoService::pessoa($fechadura_setores);
             $usuariosReplicado += $fechadura_usuarios;
@@ -169,24 +169,19 @@ class ApiService
             $usuariosReplicado += $fechadura_usuarios;
         }
         
-        $fechaduraId = [];
-        $fechaduraReg = [];
-        foreach($usuariosFechadura as $user) {
-            $fechaduraId[$user['id']] = $user;
-            $fechaduraReg[$user['registration']] = $user;
-        }
+        $collectUsersFechadura = collect($loadUsers);
+        $fechaduraId = $collectUsersFechadura->keyBy('id')->toArray();
+        $fechaduraReg = $collectUsersFechadura->keyBy('registration')->toArray();
 
         $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg);
-
+        
         $dadosFechadura = [
             'fechaduraId' => $fechaduraId,
             'fechaduraReg' => $fechaduraReg,
         ];
-
         if(!empty($faltantes)) {
             $this->createUsers($faltantes, $dadosFechadura);
         }
-
         $this->updateUsers($usuariosReplicado);
 
         return true;
