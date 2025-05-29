@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Fechadura;
 use App\Models\Log;
 use App\Services\ApiService;
