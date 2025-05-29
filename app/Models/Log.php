@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Acesso extends Model
+class Log extends Model
 {
     protected $fillable = ['fechadura_id', 'datahora', 'codpes', 'event', 'log_id_externo'];
     

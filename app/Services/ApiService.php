@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Services\LockSessionService;
-use \App\Models\Acesso;
+use \App\Models\Log;
 use App\Actions\GroupAction;
 use Illuminate\Support\Facades\Http;
 
@@ -123,7 +123,7 @@ class ApiService
         $count = 0;
         foreach ($logs as $log) {
 
-            Acesso::updateOrCreate(
+            Log::updateOrCreate(
                 ['log_id_externo' => $log['id']],
                 [
                     'event' => $log['event'],
