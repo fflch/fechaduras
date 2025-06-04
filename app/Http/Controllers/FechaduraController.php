@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Actions\CreateSetorAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
-use App\Models\Acesso;
 use App\Services\ApiService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
@@ -91,33 +90,6 @@ class FechaduraController extends Controller
     public function destroy(Fechadura $fechadura) {
         $fechadura->delete();
         return redirect('/fechaduras');
-    }
-
-    // Método para logs
-    public function logs(Fechadura $fechadura)
-    {
-        // Busca os logs do banco local, ordenados pelos mais recentes
-        $acessos = Acesso::where('fechadura_id', $fechadura->id)
-                    ->orderBy('datahora', 'desc')
-                    ->paginate(20); // Paginação para muitos registros
-
-        return view('fechaduras.logs', [
-            'fechadura' => $fechadura,
-            'acessos' => $acessos
-        ]);
-    }
-
-    //Atualiza logs
-    public function updateLogs(Fechadura $fechadura)
-    {
-        $apiService = new ApiService($fechadura);
-        $count = $apiService->updateLogs();
-
-        if($count === false) {
-            return back()->with('error', 'Erro ao atualizar os logs na base local!');
-        }
-
-        return back()->with('success', "{$count} logs atualizados");
     }
 
     public function createFechaduraUser(Fechadura $fechadura, Request $request){

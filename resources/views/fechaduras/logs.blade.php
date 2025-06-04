@@ -29,7 +29,7 @@
     </div>
 
     <div class="card-body">
-        @if($acessos->isEmpty())
+        @if($logs->isEmpty())
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i>
                 Nenhum registro encontrado no banco de dados local.
@@ -45,19 +45,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($acessos as $acesso)
+                        @foreach($logs as $log)
                         <tr>
-                            <td>{{ $acesso->datahora->format('d/m/Y H:i:s') }}</td>
-                            <td>{{ $acesso->codpes }}</td>
+                            <td>{{ $log->datahora->format('d/m/Y H:i:s') }}</td>
+                            <td>{{ $log->codpes }}</td>
                             <td>
-                                @if($acesso->codpes == 0)
+                                @if($log->codpes == 0)
                                     <span class="badge bg-secondary">Não identificado</span>
-                                @elseif($acesso->event == 7)
+                                @elseif($log->event == 7)
                                     <span class="badge bg-success">Liberado</span>
                                 @else
                                     <span class="badge bg-danger">
                                         Negado                
-                                            ({{ $acesso->event }})                                 
+                                            ({{ $log->event }})                                 
                                     </span>
                                 @endif
                             </td>
@@ -66,7 +66,7 @@
                     </tbody>
                 </table>
                 <div class="d-flex justify-content-center">
-                    {{ $acessos->links('pagination::bootstrap-4') }}
+                    {{ $logs->links('pagination::bootstrap-4') }}
                 </div>
             </div>
         @endif

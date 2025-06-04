@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Actions\CreateSetorAction;
 use App\Services\LockSessionService;
-use \App\Models\Acesso;
+use \App\Models\Log;
 use App\Actions\GroupAction;
 use App\Models\Fechadura;
 use App\Models\User;
@@ -139,7 +139,7 @@ class ApiService
         $count = 0;
         foreach ($logs as $log) {
 
-            Acesso::updateOrCreate(
+            Log::updateOrCreate(
                 ['log_id_externo' => $log['id']],
                 [
                     'event' => $log['event'],
