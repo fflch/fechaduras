@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Fechadura;
 use App\Models\Log;
-use App\Services\ApiService;
+use App\Services\ApiControlIdService;
 
 
 
@@ -27,7 +27,7 @@ class LogController extends Controller
     //Atualiza logs
     public function updateLogs(Fechadura $fechadura)
     {
-        $apiService = new ApiService($fechadura);
+        $apiService = new ApiControlIdService($fechadura);
         $count = $apiService->updateLogs();
 
         if($count === false) {

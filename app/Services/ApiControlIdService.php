@@ -2,12 +2,17 @@
 
 namespace App\Services;
 
+use App\Actions\CreateGroupAction;
+use App\Actions\CreateSetorAction;
 use App\Services\LockSessionService;
 use \App\Models\Log;
-use App\Actions\GroupAction;
+use App\Models\Fechadura;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Uspdev\Replicado\Pessoa;
 
-class ApiService
+class ApiControlIdService
 {
     /**
      * Create a new class instance.
@@ -38,23 +43,22 @@ class ApiService
             2. Verifica se o usuário existe na fechadura pela matrícula ou id (este número é o codpes).
             caso o usuario não exista, pois não há ID nem MATRÍCULA, será feito o cadastro
             */
-            $codpesFaltante =
-            isset($dadosFechadura['fechaduraReg'][$codpes]['registration'])
-            ? $dadosFechadura['fechaduraReg'][$codpes]['registration']
-            : $dadosFechadura['fechaduraId'][$codpes]['id'] ?? '';
-
-            if(!empty($faltantes[$codpes]) && $faltantes[$codpes]['codpes'] != $codpesFaltante){
+            $codpesFaltante = $dadosFechadura['id']->has($codpes)
+            ?: $dadosFechadura['registration']->has($codpes);
+            
+            if(!$codpesFaltante){
                 $response = Http::asJson()->post($url, [
                     'object' => 'users',
                     'values' => [
                         'id' => (int)$codpes,
-                        'name' => $usuario['nompesttd'] ?? $usuario['nompes'],
+                        'name' => $usuario['nompesttd'] ?? $usuario['name'],
                         'registration' => (string)$codpes,
                     ]
                 ]);
+                
                 if($response->successful()){
                     FotoUpdateService::updateFoto($this->fechadura, $codpes);
-                    GroupAction::createUserGroups($this->fechadura, $codpes, $faltantes); //verificar depois
+                    CreateGroupAction::execute($this->fechadura, $codpes, $faltantes); //verificar depois
                 }
             }
         }
@@ -67,7 +71,7 @@ class ApiService
                 'object' => 'users',
                 'values' => [
                     'id' => (int)$codpes,
-                    'name' => $usuario['nompesttd'] ?? $usuario['nompes'],
+                    'name' => $usuario['nompesttd'] ?? $usuario['name'],
                     'registration' => (string)$codpes,
                 ],
                 'where' => [
@@ -78,7 +82,7 @@ class ApiService
             ]);
             if($response->successful()){
                 FotoUpdateService::updateFoto($this->fechadura, $codpes);
-                GroupAction::createUserGroups($this->fechadura, $codpes, $usuariosReplicado);
+                CreateGroupAction::execute($this->fechadura, $codpes, $usuariosReplicado);
             }
         }
     }
@@ -94,18 +98,27 @@ class ApiService
 
     public function createUserGroups($usuariosSemGrupo){
         $urlCreate = "http://" . $this->fechadura->ip . "/create_objects.fcgi?session=" . $this->sessao;
-        foreach($usuariosSemGrupo as $user){
+        foreach($usuariosSemGrupo as $codpes => $user){
             $response = Http::post($urlCreate, [
                 'object' => 'user_groups',
                 'fields' => ['user_id','group_id'],
                 'values' => [
                     [
-                        'user_id' => (int)$user['codpes'],
+                        'user_id' => (int)$codpes,
                         'group_id' => 1
                     ]
                 ]
             ]);
         }
+    }
+
+    public function loadLogs(){
+        // 2 - Carregamento dos usuários cadastrados na fechadura
+        $route = 'http://' . $this->fechadura->ip . '/load_objects.fcgi?session=' . $this->sessao;
+        $response = Http::post($route, [
+            "object" => "users"
+        ]);
+        return $response;
     }
 
     // Atualiza os logs de acesso da fechadura no banco de dados local
@@ -137,35 +150,4 @@ class ApiService
 
         return $count;
     }
-
-    // Sincroniza usuários entre o Replicado e fechadura
-    public function syncUsers()
-    {
-        $usuariosFechadura = $this->loadUsers();
-        $usuariosReplicado = ReplicadoService::pessoa();
-
-        $fechaduraId = [];
-        $fechaduraReg = [];
-
-        foreach($usuariosFechadura as $user) {
-            $fechaduraId[$user['id']] = $user;
-            $fechaduraReg[$user['registration']] = $user;
-        }
-
-        $faltantes = array_diff_key($usuariosReplicado, $fechaduraReg);
-
-        $dadosFechadura = [
-            'fechaduraId' => $fechaduraId,
-            'fechaduraReg' => $fechaduraReg,
-        ];
-
-        if(!empty($faltantes)) {
-            $this->createUsers($faltantes, $dadosFechadura);
-        }
-
-        $this->updateUsers($usuariosReplicado);
-
-        return true;
-    }
-
 }

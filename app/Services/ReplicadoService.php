@@ -2,27 +2,30 @@
 
 namespace App\Services;
 
-use App\Models\Fechadura;
-use Illuminate\Support\Facades\Http;
-use App\Services\LockSessionService;
 use Uspdev\Replicado\DB;
 
 class ReplicadoService{
-    public static function pessoa(){
-        $query = "SELECT p.nompes, p.codpes, a.nompesttd
-        FROM LOCALIZAPESSOA p
-        INNER JOIN PESSOA a
-        ON a.codpes = p.codpes
-        WHERE p.codset = 606
-        AND p.sitatl = 'A'"; //pegar so quem esta ativo
     
-        $pessoas = DB::fetchAll($query);
+    public static function retornaSetores(){
+        $query = "SELECT s.codset, s.nomabvset, s.nomset
+        FROM SETOR s
+        WHERE s.codund = 8
+        ORDER BY s.nomabvset DESC";
 
-        $replicadoId = [];
-        foreach($pessoas as $pessoa){
-            $replicadoId[$pessoa['codpes']] = $pessoa;
-        }
+        $setores = DB::fetchAll($query);
 
-        return $replicadoId;
+        return $setores;
+    }
+
+    public static function pessoa($codsets){
+        $query = "SELECT p.codpes, a.nompesttd
+            FROM LOCALIZAPESSOA p
+            INNER JOIN PESSOA a
+            ON p.codpes = a.codpes
+            WHERE p.codset IN ($codsets)
+            AND p.sitatl = 'A'";
+            
+        return collect( DB::fetchAll($query) )
+        ->keyBy('codpes');
     }
 }
