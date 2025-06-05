@@ -14,8 +14,6 @@ return new class extends Migration
         Schema::create('setores', function (Blueprint $table) {
             $table->id();
             $table->string('codset')->nullable();
-            $table->string('nomabvset')->nullable();
-            $table->string('nomset')->nullable();
             $table->timestamps();
         });
     }

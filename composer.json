@@ -17,7 +17,7 @@
         "spatie/laravel-settings": "^3.4",
         "uspdev/laravel-usp-theme": "^2.8",
         "uspdev/replicado": "^1.25",
-        "uspdev/senhaunica-socialite": "^7.3",
+        "uspdev/senhaunica-socialite": "^4.3",
         "uspdev/wsfoto": "^2.0"
     },
     "require-dev": {

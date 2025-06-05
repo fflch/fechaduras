@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateSetorAction;
+use App\Actions\SyncUsersAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
-use App\Services\ApiService;
+use App\Services\ApiControlIdService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
 use App\Models\User;
@@ -126,7 +127,7 @@ class FechaduraController extends Controller
 
     public function deleteUser(Fechadura $fechadura, User $user){
         $fechadura->usuarios()->detach($user->id);
-        request()->session()->flash('alert-warning', "Usuário {$user->name} removido com sucesso!");
+        request()->session()->flash('alert-warning', "{$user->name} removido");
         return back();
     }
 
@@ -134,9 +135,8 @@ class FechaduraController extends Controller
     //Sincroniza replicado com fechadura
     public function sincronizar(Request $request, Fechadura $fechadura)
     {
-        $apiService = new ApiService($fechadura);
-        $apiService->syncUsers($request, $fechadura);
-        //verificar se realmente houve um retorno de sucesso
+        $apiService = new SyncUsersAction($fechadura);
+        $apiService->execute($request, $fechadura);
         request()->session()->flash('alert-success','Dados sincronizados!');
         return back();
     }

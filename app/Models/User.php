@@ -12,12 +12,7 @@ use App\Models\Setor;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
-    use Notifiable;
-    use HasRoles;
-    use HasSenhaunica;
-    use \Spatie\Permission\Traits\HasRoles;
-    use \Uspdev\SenhaunicaSocialite\Traits\HasSenhaunica;
+    use HasFactory,Notifiable,HasRoles,HasSenhaunica;
 
     /**
      * The attributes that are mass assignable.

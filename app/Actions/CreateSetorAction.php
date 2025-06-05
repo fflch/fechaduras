@@ -28,8 +28,6 @@ class CreateSetorAction
         if(!$setor){
             $setor = new Setor();
             $setor->codset = $this->codset;
-            $setor->nomset = $estrutura['nomset'];
-            $setor->nomabvset = $estrutura['nomabvset'];
             $setor->save();
         }
         $this->fechadura->setores()->attach($setor->id);

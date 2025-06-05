@@ -2,9 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Fechadura;
-use Illuminate\Support\Facades\Http;
-use App\Services\LockSessionService;
 use Uspdev\Replicado\DB;
 
 class ReplicadoService{
@@ -20,21 +17,15 @@ class ReplicadoService{
         return $setores;
     }
 
-    public static function pessoa(array $codsets){
-        $codset = implode(',', $codsets);
-        
+    public static function pessoa($codsets){
         $query = "SELECT p.codpes, a.nompesttd
             FROM LOCALIZAPESSOA p
             INNER JOIN PESSOA a
             ON p.codpes = a.codpes
-            WHERE p.codset IN ($codset)
-            AND p.sitatl = 'A'"; //pegar so quem esta ativo
+            WHERE p.codset IN ($codsets)
+            AND p.sitatl = 'A'";
             
-        $pessoas = DB::fetchAll($query);
-
-        $collection = collect($pessoas);
-        $replicadoId = $collection->keyBy('codpes')->toArray();
-        
-        return $replicadoId;
+        return collect( DB::fetchAll($query) )
+        ->keyBy('codpes');
     }
 }
