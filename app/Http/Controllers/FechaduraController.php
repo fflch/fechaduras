@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\CreateSetorAction;
+use App\Actions\SyncUsersAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
-use App\Services\ApiService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
+use App\Models\User;
+use App\Services\UsuarioService;
+use Illuminate\Http\Request;
 
 class FechaduraController extends Controller
 {
@@ -88,13 +92,46 @@ class FechaduraController extends Controller
         return redirect('/fechaduras');
     }
 
+    public function createFechaduraUser(Fechadura $fechadura, Request $request){
+        if(!$request->codpes){
+            request()->session()->flash('alert-danger', 'Informe número USP!');
+            return back();
+        }
+        $codpes = UsuarioService::verifyAndCreateUsers($request->codpes, $fechadura);
+        if (count($codpes) > 0) {
+            $request->session()->flash('alert-danger', "Número(s) USP " . implode(', ', $codpes) . " não cadastrado(s).");
+        }
+        else {
+            $request->session()->flash('alert-success', "Usuário(s) cadastrado(s) com sucesso!");
+        }
+
+        return back()->withInput();
+    }
+
+    public function createFechaduraSetor(Fechadura $fechadura, Request $request){
+        if(empty($request->setores)){
+            request()->session()->flash('alert-danger', 'Informe o setor!');
+            return back();
+        }
+
+        CreateSetorAction::execute($request->setores, $fechadura);
+        request()->session()->flash('alert-success', 'Setores atualizados com sucesso!');
+
+        return back();
+    }
+
+    public function deleteUser(Fechadura $fechadura, User $user){
+        $fechadura->usuarios()->detach($user->id);
+        request()->session()->flash('alert-warning', "{$user->name} removido");
+        return back();
+    }
+
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
     //Sincroniza replicado com fechadura
     public function sincronizar(Fechadura $fechadura)
     {
-        $apiService = new ApiService($fechadura);
-        $apiService->syncUsers();
-
-        return back()->with('success','Dados sincronizados');
+        SyncUsersAction::execute($fechadura);
+        request()->session()->flash('alert-success','Dados sincronizados!');
+        return back();
     }
 }
