@@ -11,33 +11,25 @@ class SyncUsersAction
      * Create a new class instance.
      */
 
-     public $fechadura;
-
-    public function __construct($fechadura)
-    {
-        $this->fechadura = $fechadura;
-    }
-
-    public function execute($request, $fechadura){
+    public static function execute($fechadura){
         $api = new ApiControlIdService($fechadura);
         $loadUsers = collect($api->loadUsers());
-        $fechadura_setores = $fechadura->setores->select('codset');
-        $fechadura_usuarios = $fechadura->usuarios->select(['codpes','name'])->keyBy('codpes');
+        $setores = $fechadura->setores->select('codset');
+        $usuariosFechadura = $fechadura->usuarios->select(['codpes','name'])->keyBy('codpes');
 
-        $usuariosReplicado = $fechadura_setores->when($fechadura_setores->isNotEmpty(), function($codsets){
-            return ReplicadoService::pessoa($codsets->implode('codset',','));
-        }, function() use ($fechadura_usuarios){
-            return $fechadura_usuarios;
-        })->mergeRecursive($fechadura_usuarios)->keyBy('codpes');
+        $usuariosReplicado = $setores->isNotEmpty() ?
+            ReplicadoService::pessoa($setores->implode('codset', ',')) :
+            collect();
 
-        $faltantes = $usuariosReplicado->diffKeys($loadUsers->keyBy('registration'));
-        if($faltantes->isNotEmpty()){
-            $chaves = collect(['id','registration']);
-            $dadosFechadura = $chaves->combine([$loadUsers->keyBy('id'), $loadUsers->keyBy('registration')]);
-            $api->createUsers($faltantes, $dadosFechadura);
+        $usuarios = $usuariosReplicado->merge($usuariosFechadura)->keyBy('codpes');
+
+        $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
+            ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))->keyBy('codpes');
+
+        if ($faltantes->isNotEmpty()) {
+            $api->createUsers($faltantes);
         }
-        $api->updateUsers($usuariosReplicado);
-
+        $api->updateUsers($usuarios);
     }
 
 }

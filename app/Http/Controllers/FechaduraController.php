@@ -6,7 +6,6 @@ use App\Actions\CreateSetorAction;
 use App\Actions\SyncUsersAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
-use App\Services\ApiControlIdService;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
 use App\Models\User;
@@ -98,30 +97,26 @@ class FechaduraController extends Controller
             request()->session()->flash('alert-danger', 'Informe número USP!');
             return back();
         }
-        $usuariosRequest = explode(',', $request->codpes);
-        $requestsNumericos = array_filter($usuariosRequest, 'is_numeric');
-        foreach($requestsNumericos as $codpes){
-            $codpes = UsuarioService::verifyAndCreateUsers($codpes, $fechadura, $request);
-            if($codpes instanceof \Illuminate\Http\RedirectResponse){
-                return $codpes;
-            }
+        $codpes = UsuarioService::verifyAndCreateUsers($request->codpes, $fechadura);
+        if (count($codpes) > 0) {
+            $request->session()->flash('alert-danger', "Número(s) USP " . implode(', ', $codpes) . " não cadastrado(s).");
         }
-        request()->session()->flash('alert-success', "Usuário(s) cadastrado(s) com sucesso!");
-        return back();
+        else {
+            $request->session()->flash('alert-success', "Usuário(s) cadastrado(s) com sucesso!");
+        }
+
+        return back()->withInput();
     }
 
     public function createFechaduraSetor(Fechadura $fechadura, Request $request){
-        $fechadura->setores()->detach(); //remove todos os setores antes de adicionar novos
         if(empty($request->setores)){
-            $request->session()->flash('alert-success','Setores atualizados');
+            request()->session()->flash('alert-danger', 'Informe o setor!');
             return back();
         }
-        
-        foreach($request->setores as $codset){
-            $createSetor = new CreateSetorAction($codset, $fechadura);
-            $createSetor->execute();
-        }
+
+        CreateSetorAction::execute($request->setores, $fechadura);
         request()->session()->flash('alert-success', 'Setores atualizados com sucesso!');
+
         return back();
     }
 
@@ -133,10 +128,9 @@ class FechaduraController extends Controller
 
     //https://documenter.getpostman.com/view/7260734/S1LvX9b1?version=latest#76b4c5d7-e776-4569-bb19-341fdc1ccb7f
     //Sincroniza replicado com fechadura
-    public function sincronizar(Request $request, Fechadura $fechadura)
+    public function sincronizar(Fechadura $fechadura)
     {
-        $apiService = new SyncUsersAction($fechadura);
-        $apiService->execute($request, $fechadura);
+        SyncUsersAction::execute($fechadura);
         request()->session()->flash('alert-success','Dados sincronizados!');
         return back();
     }

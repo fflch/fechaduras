@@ -5,7 +5,7 @@ namespace App\Services;
 use Uspdev\Replicado\DB;
 
 class ReplicadoService{
-    
+
     public static function retornaSetores(){
         $query = "SELECT s.codset, s.nomabvset, s.nomset
         FROM SETOR s
@@ -18,14 +18,12 @@ class ReplicadoService{
     }
 
     public static function pessoa($codsets){
-        $query = "SELECT p.codpes, a.nompesttd
-            FROM LOCALIZAPESSOA p
-            INNER JOIN PESSOA a
-            ON p.codpes = a.codpes
-            WHERE p.codset IN ($codsets)
-            AND p.sitatl = 'A'";
-            
+        $query = "SELECT l.codpes, l.nompes
+            FROM LOCALIZAPESSOA l
+            WHERE l.codset IN ($codsets)
+            AND l.sitatl = 'A'";
+
         return collect( DB::fetchAll($query) )
-        ->keyBy('codpes');
+            ->keyBy('codpes');
     }
 }

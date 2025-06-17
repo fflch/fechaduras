@@ -11,28 +11,31 @@ class UsuarioService
      * Create a new class instance.
      */
 
-    public static function verifyAndCreateUsers($codpes, $fechadura, $request){
-        $user = User::firstWhere('codpes',$codpes);
-        if(empty($user)){
-            $dadosPessoa = Pessoa::dump($codpes, ['nompesttd']);
-            if($dadosPessoa){
-                $user = new User;
-                $user->name = $dadosPessoa['nompesttd'];
-                $user->codpes = $codpes;
-                $user->save();
-            }else{
-                $request->session()->flash('alert-danger', 'Algum número USP pode ter sido digitado incorretamente! Verifique novamente o campo.');
-                return back()->withInput();
+    public static function verifyAndCreateUsers($codpes, $fechadura) :array {
+        $numerosUsp = explode(',', $codpes);
+        $numerosUsp = array_filter($numerosUsp, 'is_numeric');
+
+        $naoEncontrado = [];
+        foreach($numerosUsp as $codpes) {
+            $user = User::firstWhere('codpes', $codpes);
+            if ($user){
+                if (! $fechadura->usuarios->contains($user->id)) {
+                    $fechadura->usuarios()->attach($user->id);
+                }
+            } else {
+                $pessoa = Pessoa::dump($codpes, ['nompesttd']);
+                if ($pessoa){
+                    $user = new User;
+                    $user->name = $pessoa['nompesttd'];
+                    $user->codpes = $codpes;
+                    $user->save();
+                    $fechadura->usuarios()->attach($user->id);
+                } else{
+                    array_push($naoEncontrado, $codpes);
+                }
             }
         }
-        $userRequest[trim($codpes)] = trim($codpes); //transforma o codpes em index
-        
-        if(!$fechadura->usuarios->contains($user)){
-            $fechadura->usuarios()->attach($user->id);
-        }else{
-            $request->session()->flash('alert-danger', 'Algum usuário já está cadastrado! Verifique novamente o campo.');
-            return redirect()->back()->withInput();
-        }
-        return $userRequest;
+
+        return $naoEncontrado;
     }
 }

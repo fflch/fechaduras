@@ -3,14 +3,10 @@
 namespace App\Services;
 
 use App\Actions\CreateGroupAction;
-use App\Actions\CreateSetorAction;
 use App\Services\LockSessionService;
 use \App\Models\Log;
 use App\Models\Fechadura;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
-use Uspdev\Replicado\Pessoa;
 
 class ApiControlIdService
 {
@@ -21,7 +17,7 @@ class ApiControlIdService
     protected $fechadura;
     protected $sessao;
 
-    public function __construct($fechadura)
+    public function __construct(Fechadura $fechadura)
     {
         $this->fechadura = $fechadura;
         $this->sessao = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
@@ -35,43 +31,34 @@ class ApiControlIdService
         return $response->json()['users'] ?? [];
     }
 
-    public function createUsers($faltantes, $dadosFechadura){
+    public function createUsers($faltantes){
         $url = 'http://' . $this->fechadura->ip . '/create_objects.fcgi?session=' . $this->sessao;
 
         foreach ($faltantes as $codpes => $usuario) {
-            /*
-            2. Verifica se o usuário existe na fechadura pela matrícula ou id (este número é o codpes).
-            caso o usuario não exista, pois não há ID nem MATRÍCULA, será feito o cadastro
-            */
-            $codpesFaltante = $dadosFechadura['id']->has($codpes)
-            ?: $dadosFechadura['registration']->has($codpes);
-            
-            if(!$codpesFaltante){
-                $response = Http::asJson()->post($url, [
-                    'object' => 'users',
-                    'values' => [
-                        'id' => (int)$codpes,
-                        'name' => $usuario['nompesttd'] ?? $usuario['name'],
-                        'registration' => (string)$codpes,
-                    ]
-                ]);
-                
-                if($response->successful()){
-                    FotoUpdateService::updateFoto($this->fechadura, $codpes);
-                    CreateGroupAction::execute($this->fechadura, $codpes, $faltantes); //verificar depois
-                }
-            }
-        }
-    }
-
-    public function updateUsers($usuariosReplicado){
-        $url = 'http://' . $this->fechadura->ip . '/modify_objects.fcgi?session=' . $this->sessao;
-        foreach($usuariosReplicado as $codpes => $usuario){
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
                 'values' => [
                     'id' => (int)$codpes,
-                    'name' => $usuario['nompesttd'] ?? $usuario['name'],
+                    'name' => $usuario['nompes'] ?? $usuario['name'],
+                    'registration' => (string)$codpes,
+                ]
+            ]);
+
+            if($response->successful()){
+                FotoUpdateService::updateFoto($this->fechadura, $codpes);
+                $this->createUserGroups($codpes);
+            }
+        }
+    }
+
+    public function updateUsers($usuarios){
+        $url = 'http://' . $this->fechadura->ip . '/modify_objects.fcgi?session=' . $this->sessao;
+        foreach($usuarios as $codpes => $usuario){
+            $response = Http::asJson()->post($url, [
+                'object' => 'users',
+                'values' => [
+                    'id' => (int)$codpes,
+                    'name' => $usuario['nompes'] ?? $usuario['name'],
                     'registration' => (string)$codpes,
                 ],
                 'where' => [
@@ -82,7 +69,8 @@ class ApiControlIdService
             ]);
             if($response->successful()){
                 FotoUpdateService::updateFoto($this->fechadura, $codpes);
-                CreateGroupAction::execute($this->fechadura, $codpes, $usuariosReplicado);
+                $this->createUserGroups($codpes);
+
             }
         }
     }
@@ -96,20 +84,18 @@ class ApiControlIdService
         return $response->json()['user_groups'] ?? [];
     }
 
-    public function createUserGroups($usuariosSemGrupo){
+    public function createUserGroups($codpes, $group = 1){
         $urlCreate = "http://" . $this->fechadura->ip . "/create_objects.fcgi?session=" . $this->sessao;
-        foreach($usuariosSemGrupo as $codpes => $user){
-            $response = Http::post($urlCreate, [
-                'object' => 'user_groups',
-                'fields' => ['user_id','group_id'],
-                'values' => [
-                    [
-                        'user_id' => (int)$codpes,
-                        'group_id' => 1
-                    ]
+        Http::post($urlCreate, [
+            'object' => 'user_groups',
+            'fields' => ['user_id','group_id'],
+            'values' => [
+                [
+                    'user_id' => (int)$codpes,
+                    'group_id' => $group
                 ]
-            ]);
-        }
+            ]
+        ]);
     }
 
     public function loadLogs(){

@@ -3,36 +3,24 @@
 namespace App\Actions;
 
 use App\Models\Setor;
-use Uspdev\Replicado\Estrutura;
 
 class CreateSetorAction
 {
     /**
      * Create a new class instance.
      */
-    
-    public $codset;
-    public $fechadura;
 
-    public function __construct($codset, $fechadura)
+    public static function execute($setores, $fechadura): void
     {
-        $this->codset = $codset;
-        $this->fechadura = $fechadura;
-    }
-
-    public function execute()
-    {
-        $setor = Setor::firstWhere('codset', $this->codset);
-        $estrutura = Estrutura::dump($this->codset);
-
-        if(!$setor){
-            $setor = new Setor();
-            $setor->codset = $this->codset;
-            $setor->save();
+        $setoresId = [];
+        foreach ($setores as $codset) {
+            $setor = Setor::firstOrCreate(
+                ['codset' => $codset],
+            );
+            array_push($setoresId, $setor->id);
         }
-        $this->fechadura->setores()->attach($setor->id);
 
-        return $setor;
+        $fechadura->setores()->sync($setoresId);
     }
 
 }
