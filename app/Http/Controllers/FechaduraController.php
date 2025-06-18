@@ -8,6 +8,7 @@ use App\Services\LockSessionService;
 use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
+use App\Models\Area;
 use App\Models\User;
 use App\Services\UsuarioService;
 use Illuminate\Http\Request;
@@ -117,6 +118,21 @@ class FechaduraController extends Controller
         CreateSetorAction::execute($request->setores, $fechadura);
         request()->session()->flash('alert-success', 'Setores atualizados com sucesso!');
 
+        return back();
+    }
+
+    public function createFechaduraPos(Request $request, Fechadura $fechadura){
+        if(empty($request->setores_pos)){
+            $request->session()->flash('alert-danger','Informe a área de pós-graduação');
+            return back();
+        }
+        $setoresId = [];
+        foreach($request->setores_pos as $codare){
+            $setor_pos = Area::firstOrCreate(['codare' => $codare]);
+            array_push($setoresId, $setor_pos->id);
+        }
+        $fechadura->areas()->sync($setoresId);
+        $request->session()->flash('alert-success', "Setor(es) inserido(s)");
         return back();
     }
 

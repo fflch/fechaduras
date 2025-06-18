@@ -23,6 +23,10 @@ class Fechadura extends Model
     public function setores() {
         return $this->belongsToMany(Setor::class);
     }
+    
+    public function areas(){
+        return $this->belongsToMany(Area::class, 'fechadura_areas');
+    }
 
     public function usuarios(){
         return $this->belongsToMany(User::class);
