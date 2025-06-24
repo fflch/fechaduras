@@ -46,4 +46,17 @@ class ReplicadoService{
         return false;
     }
 
+
+    public static function retornaAlunosPos($codare){
+        $query =  "SELECT DISTINCT l.codpes, l.nompes 
+        FROM LOCALIZAPESSOA l
+        INNER JOIN AGPROGRAMA a on a.codpes = l.codpes
+        WHERE l.sitatl = 'A' AND l.tipvin = 'ALUNOPOS'
+        AND a.codare IN ($codare)";
+
+        $result = collect(DB::fetchAll($query));
+        
+        return $result;
+    }
+
 }

@@ -15,14 +15,22 @@ class SyncUsersAction
         $api = new ApiControlIdService($fechadura);
         $loadUsers = collect($api->loadUsers());
         $setores = $fechadura->setores->select('codset');
+        $areas = $fechadura->areas->select('codare');
         $usuariosFechadura = $fechadura->usuarios->select(['codpes','name'])->keyBy('codpes');
 
-        $usuariosReplicado = $setores->isNotEmpty() ?
-            ReplicadoService::pessoa($setores->implode('codset', ',')) :
-            collect();
+        $usuariosSetor = $setores->isNotEmpty() ?
+        ReplicadoService::pessoa($setores->implode('codset', ',')) :
+        collect();
 
-        $usuarios = $usuariosReplicado->merge($usuariosFechadura)->keyBy('codpes');
+        $alunosPos = $areas->isNotEmpty() ? 
+        ReplicadoService::retornaAlunosPos($areas->implode('codare',',')) :
+        collect();
+          
+        $usuarios = $alunosPos->merge($usuariosSetor)
+                            ->merge($usuariosFechadura)
+                            ->keyBy('codpes');
 
+        //usa ID ou matricula para verificar se o usuário existe
         $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
             ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))->keyBy('codpes');
 

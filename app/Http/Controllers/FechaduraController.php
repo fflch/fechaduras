@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateSetorAction;
 use App\Actions\SyncUsersAction;
+use App\Actions\CreateAreasAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
@@ -111,27 +112,20 @@ class FechaduraController extends Controller
 
     public function createFechaduraSetor(Fechadura $fechadura, Request $request){
         if(empty($request->setores)){
-            request()->session()->flash('alert-danger', 'Informe o setor!');
+            $fechadura->setores()->detach();
             return back();
         }
-
         CreateSetorAction::execute($request->setores, $fechadura);
         request()->session()->flash('alert-success', 'Setores atualizados com sucesso!');
-
         return back();
     }
 
     public function createFechaduraPos(Request $request, Fechadura $fechadura){
-        if(empty($request->setores_pos)){
-            $request->session()->flash('alert-danger','Informe a área de pós-graduação');
+        if(empty($request->areas)){
+            $fechadura->areas()->detach();
             return back();
         }
-        $setoresId = [];
-        foreach($request->setores_pos as $codare){
-            $setor_pos = Area::firstOrCreate(['codare' => $codare]);
-            array_push($setoresId, $setor_pos->id);
-        }
-        $fechadura->areas()->sync($setoresId);
+        CreateAreasAction::execute($request->areas, $fechadura);
         $request->session()->flash('alert-success', "Setor(es) inserido(s)");
         return back();
     }

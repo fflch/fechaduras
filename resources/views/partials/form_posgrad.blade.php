@@ -1,9 +1,9 @@
 <form method="post" action="/fechaduras/{{ $fechadura->id }}/create_fechadura_pos">
     @csrf
     <div class="card">
-        <div class="card-header"><b>Usuários da pós-graduação</b></div>
+        <div class="card-header"><b>Cadastrar áreas da pós-graduação</b></div>
         <div class="card-body">
-            <select name="setores_pos[]" class="select2 form-control" multiple="multiple">
+            <select name="areas[]" class="select2 form-control" multiple="multiple">
                 @foreach(\App\Services\ReplicadoService::programasPosUnidade() as $setor_pos)
                     <option value="{{ $setor_pos['codare'] }}" 
                     {{ $fechadura->areas->contains('codare', $setor_pos['codare']) ? 'selected' : '' }}>
