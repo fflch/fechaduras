@@ -136,4 +136,48 @@ class ApiControlIdService
 
         return $count;
     }
+
+    public function uploadFoto($userId, $foto)
+    {
+         $url = $this->fechadura->ip . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
+        //dd($userId, $url);
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/octet-stream'
+        ])->withBody(
+            file_get_contents($foto->path()), 
+            'application/octet-stream'
+        )->post($url);
+
+        //dd($response->body());
+        return $response->successful();
+    }
+
+    public function cadastrarSenha($userId, $senha)
+    {
+        // 1. Gerar o hash da senha
+        $hashUrl = 'http://' . $this->fechadura->ip . '/user_hash_password.fcgi?session=' . $this->sessao;
+        $hashResponse = Http::asJson()->post($hashUrl, [
+            'password' => (string)$senha
+        ]);
+
+        $hashedData = $hashResponse->json();
+
+        // 2. Atualizar o usuário com o hash
+        $updateUrl = 'http://' . $this->fechadura->ip . '/modify_objects.fcgi?session=' . $this->sessao;
+        
+        $response = Http::asJson()->post($updateUrl, [
+            'object' => 'users',
+            'values' => [
+                'password' => $hashedData['password'],
+                'salt' => $hashedData['salt']
+            ],
+            'where' => [
+                'users' => [
+                    'id' => (int)$userId
+                ]
+            ]
+        ]);
+
+        return $response->successful();
+    }
 }

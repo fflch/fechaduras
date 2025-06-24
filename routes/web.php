@@ -17,6 +17,12 @@ Route::get('/fechaduras/{fechadura}/logs', [LogController::class, 'logs']);
 Route::post('/fechaduras/{fechadura}/logs', [LogController::class, 'updateLogs']);
 
 Route::post('/fotos', [FechaduraController::class, 'fotos']);
+Route::get('/fechaduras/{fechadura}/cadastrar-foto/{userId}', [FechaduraController::class, 'showCadastrarFoto']);
+Route::post('/fechaduras/{fechadura}/cadastrar-foto/{userId}', [FechaduraController::class, 'cadastrarFoto']);
+
+Route::get('/fechaduras/{fechadura}/cadastrar-senha/{userId}', [FechaduraController::class, 'showCadastrarSenha']);
+Route::post('/fechaduras/{fechadura}/cadastrar-senha/{userId}', [FechaduraController::class, 'cadastrarSenha']);
+
 Route::post('/fechaduras/{fechadura}/sincronizar',[FechaduraController::class, 'sincronizar']);
 Route::post('/fechaduras/{fechadura}/delete_user/{user}',[FechaduraController::class, 'deleteUser']);
 Route::post('/fechaduras/{fechadura}/create_fechadura_user', [FechaduraController::class, 'createFechaduraUser']);
