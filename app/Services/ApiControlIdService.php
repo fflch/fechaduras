@@ -140,7 +140,7 @@ class ApiControlIdService
     public function uploadFoto($userId, $foto)
     {
          $url = $this->fechadura->ip . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
-        //dd($userId, $url);
+
         $response = Http::withHeaders([
             'Content-Type' => 'application/octet-stream'
         ])->withBody(
@@ -148,7 +148,6 @@ class ApiControlIdService
             'application/octet-stream'
         )->post($url);
 
-        //dd($response->body());
         return $response->successful();
     }
 
