@@ -11,7 +11,11 @@ class CreateAreasAction
      */
     public static function execute($areas, $fechadura): void
     {
-        $setoresId = [];
+        if ( empty($areas) ){
+            $fechadura->areas()->detach();
+        }
+        else {
+            $setoresId = [];
             foreach($areas as $codare){
                 $setor_pos = Area::firstOrCreate(
                     ['codare' => $codare]
@@ -19,5 +23,6 @@ class CreateAreasAction
                 array_push($setoresId, $setor_pos->id);
             }
             $fechadura->areas()->sync($setoresId);
+        }
     }
 }

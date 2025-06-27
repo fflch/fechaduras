@@ -19,16 +19,16 @@ class SyncUsersAction
         $usuariosFechadura = $fechadura->usuarios->select(['codpes','name'])->keyBy('codpes');
 
         $usuariosSetor = $setores->isNotEmpty() ?
-        ReplicadoService::pessoa($setores->implode('codset', ',')) :
-        collect();
+            ReplicadoService::pessoa($setores->implode('codset', ',')) :
+            collect();
 
-        $alunosPos = $areas->isNotEmpty() ? 
-        ReplicadoService::retornaAlunosPos($areas->implode('codare',',')) :
-        collect();
-          
+        $alunosPos = $areas->isNotEmpty() ?
+            ReplicadoService::retornaAlunosPos($areas->implode('codare',',')) :
+            collect();
+
         $usuarios = $alunosPos->merge($usuariosSetor)
-                            ->merge($usuariosFechadura)
-                            ->keyBy('codpes');
+            ->merge($usuariosFechadura)
+            ->keyBy('codpes');
 
         //usa ID ou matricula para verificar se o usuário existe
         $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
@@ -37,6 +37,7 @@ class SyncUsersAction
         if ($faltantes->isNotEmpty()) {
             $api->createUsers($faltantes);
         }
+
         $api->updateUsers($usuarios);
     }
 

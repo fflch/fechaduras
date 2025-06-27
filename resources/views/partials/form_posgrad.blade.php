@@ -4,10 +4,10 @@
         <div class="card-header"><b>Cadastrar áreas da pós-graduação</b></div>
         <div class="card-body">
             <select name="areas[]" class="select2 form-control" multiple="multiple">
-                @foreach(\App\Services\ReplicadoService::programasPosUnidade() as $setor_pos)
-                    <option value="{{ $setor_pos['codare'] }}" 
-                    {{ $fechadura->areas->contains('codare', $setor_pos['codare']) ? 'selected' : '' }}>
-                    {{ $setor_pos['nomare'] }}
+                @foreach($programas as $programa)
+                    <option value="{{ $programa['codare'] }}"
+                    {{ $fechadura->areas->contains('codare', $programa['codare']) ? 'selected' : '' }}>
+                    {{ $programa['nomare'] }}
                 </option>
                 @endforeach
             </select>

@@ -31,12 +31,14 @@ class ReplicadoService{
     public static function programasPosUnidade(){
         $codundclgi = getenv('REPLICADO_CODUNDCLG');
         //obtém programas
-        $query = "SELECT DISTINCT (n.nomare), (a.codare) FROM AREA a inner join CURSO c ON a.codcur = c.codcur INNER JOIN NOMEAREA n on n.codare = a.codare INNER JOIN CREDAREA ca ON a.codare = ca.codare where c.codclg = convert(int, :codundclgi) and n.dtafimare = NULL";
+        $query = "SELECT DISTINCT (n.nomare), (a.codare) FROM AREA a inner join CURSO c
+            ON a.codcur = c.codcur INNER JOIN NOMEAREA n on n.codare = a.codare INNER JOIN CREDAREA ca
+            ON a.codare = ca.codare where c.codclg = convert(int, :codundclgi) and n.dtafimare = NULL";
         $param = [
             'codundclgi' => $codundclgi,
         ];
         $result = DB::fetchAll($query, $param);
-        
+
         if(!empty($result)) {
             $result = Uteis::utf8_converter($result);
             $result = Uteis::trim_recursivo($result);
@@ -48,15 +50,14 @@ class ReplicadoService{
 
 
     public static function retornaAlunosPos($codare){
-        $query =  "SELECT DISTINCT l.codpes, l.nompes 
+        $query =  "SELECT DISTINCT l.codpes, l.nompes
         FROM LOCALIZAPESSOA l
         INNER JOIN AGPROGRAMA a on a.codpes = l.codpes
         WHERE l.sitatl = 'A' AND l.tipvin = 'ALUNOPOS'
         AND a.codare IN ($codare)";
 
-        $result = collect(DB::fetchAll($query));
-        
-        return $result;
+        return collect(DB::fetchAll($query));
+
     }
 
 }
