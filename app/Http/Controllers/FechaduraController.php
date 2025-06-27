@@ -11,6 +11,9 @@ use App\Http\Requests\FechaduraRequest;
 use App\Models\User;
 use App\Services\UsuarioService;
 use Illuminate\Http\Request;
+use App\Services\ApiControlIdService;
+use App\Http\Requests\CadastrarFotoRequest;
+use App\Http\Requests\CadastrarSenhaRequest;
 
 class FechaduraController extends Controller
 {
@@ -133,5 +136,39 @@ class FechaduraController extends Controller
         SyncUsersAction::execute($fechadura);
         request()->session()->flash('alert-success','Dados sincronizados!');
         return back();
+    }
+
+    //mostra view para cadastrar foto na fechadura
+    public function showCadastrarFoto(Fechadura $fechadura, $userId)
+    {
+        return view('fechaduras.cadastrar_foto', [
+            'fechadura' => $fechadura,
+            'userId' => $userId
+        ]);
+    }
+
+    //mostra view para cadastrar senha na fechadura
+    public function showCadastrarSenha(Fechadura $fechadura, $userId)
+    {
+        return view('fechaduras.cadastrar_senha', [
+            'fechadura' => $fechadura,
+            'userId' => $userId
+        ]);
+    }
+
+    public function cadastrarFoto(CadastrarFotoRequest $request, Fechadura $fechadura, $userId)
+    {
+        $apiService = new ApiControlIdService($fechadura);
+        $apiService->uploadFoto($userId, $request->file('foto'));
+
+        return redirect("/fechaduras/{$fechadura->id}");
+    }
+
+    public function cadastrarSenha(CadastrarSenhaRequest $request, Fechadura $fechadura, $userId)
+    {
+        $apiService = new ApiControlIdService($fechadura);
+        $apiService->cadastrarSenha($userId, $request->input('senha'));
+
+        return redirect("/fechaduras/{$fechadura->id}");
     }
 }

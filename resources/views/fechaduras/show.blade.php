@@ -39,6 +39,8 @@
                     <tr>
                         <th>ID</th>
                         <th>Nome</th>
+                        <th>Foto</th>
+                        <th>Senha</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,6 +48,36 @@
                         <tr>
                             <td>{{ $usuario['id'] ?? 'N/A' }}</td>
                             <td>{{ $usuario['name'] ?? 'Sem nome' }}</td>
+                            <td>
+                                @if($usuario['image_timestamp'] > 0)
+                                    <span class="text-success">✔</span>
+                                    <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $usuario['id'] }}" 
+                                    class="btn btn-sm btn-outline-secondary">
+                                    Alterar foto
+                                    </a>
+                                @else
+                                    <span class="text-danger">✖</span>
+                                    <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $usuario['id'] }}" 
+                                    class="btn btn-sm btn-outline-primary">
+                                    Cadastrar foto
+                                    </a>
+                                @endif
+                            </td>
+                            <td>
+                                @if(!empty($usuario['password']))
+                                    <span class="text-success">✔</span>
+                                    <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-senha/{{ $usuario['id'] }}" 
+                                    class="btn btn-sm btn-outline-secondary">
+                                    Alterar senha
+                                    </a>
+                                @else
+                                    <span class="text-danger">✖</span>
+                                    <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-senha/{{ $usuario['id'] }}" 
+                                    class="btn btn-sm btn-outline-primary">
+                                    Cadastrar senha
+                                    </a>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
