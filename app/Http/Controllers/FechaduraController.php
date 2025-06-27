@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateSetorAction;
 use App\Actions\SyncUsersAction;
+use App\Actions\CreateAreasAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use App\Services\ApiControlIdService;
 use App\Http\Requests\CadastrarFotoRequest;
 use App\Http\Requests\CadastrarSenhaRequest;
+use App\Services\ReplicadoService;
 
 class FechaduraController extends Controller
 {
@@ -62,7 +64,8 @@ class FechaduraController extends Controller
         // 3 - passa os dados para a view
         return view('fechaduras.show', [
             'fechadura' => $fechadura,
-            'usuarios' => $usuarios
+            'usuarios' => $usuarios,
+            'programas' => ReplicadoService::programasPosUnidade()
         ]);
     }
 
@@ -112,14 +115,14 @@ class FechaduraController extends Controller
     }
 
     public function createFechaduraSetor(Fechadura $fechadura, Request $request){
-        if(empty($request->setores)){
-            request()->session()->flash('alert-danger', 'Informe o setor!');
-            return back();
-        }
-
         CreateSetorAction::execute($request->setores, $fechadura);
         request()->session()->flash('alert-success', 'Setores atualizados com sucesso!');
+        return back();
+    }
 
+    public function createFechaduraPos(Request $request, Fechadura $fechadura){
+        CreateAreasAction::execute($request->areas, $fechadura);
+        $request->session()->flash('alert-success', "Setor(es) inserido(s)");
         return back();
     }
 
