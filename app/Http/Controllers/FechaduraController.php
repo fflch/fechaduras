@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Actions\CreateSetorAction;
 use App\Actions\SyncUsersAction;
+use App\Actions\CreateAreasAction;
 use App\Services\LockSessionService;
 use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
 use App\Http\Requests\FechaduraRequest;
+use App\Models\Area;
 use App\Models\User;
 use App\Services\UsuarioService;
 use Illuminate\Http\Request;
@@ -113,13 +115,21 @@ class FechaduraController extends Controller
 
     public function createFechaduraSetor(Fechadura $fechadura, Request $request){
         if(empty($request->setores)){
-            request()->session()->flash('alert-danger', 'Informe o setor!');
+            $fechadura->setores()->detach();
             return back();
         }
-
         CreateSetorAction::execute($request->setores, $fechadura);
         request()->session()->flash('alert-success', 'Setores atualizados com sucesso!');
+        return back();
+    }
 
+    public function createFechaduraPos(Request $request, Fechadura $fechadura){
+        if(empty($request->areas)){
+            $fechadura->areas()->detach();
+            return back();
+        }
+        CreateAreasAction::execute($request->areas, $fechadura);
+        $request->session()->flash('alert-success', "Setor(es) inserido(s)");
         return back();
     }
 

@@ -1,7 +1,7 @@
 <form method="post" action="/fechaduras/{{ $fechadura->id }}/create_fechadura_setor">
     @csrf
     <div class="card">
-        <div class="card-header"><b>Setores</b></div>
+        <div class="card-header"><b>Cadastrar setores</b></div>
         <div class="card-body">
             <select name="setores[]" class="select2 form-control" multiple="multiple">
                 @foreach (\App\Services\ReplicadoService::retornaSetores() as $setor)

@@ -27,6 +27,7 @@ Route::post('/fechaduras/{fechadura}/sincronizar',[FechaduraController::class, '
 Route::post('/fechaduras/{fechadura}/delete_user/{user}',[FechaduraController::class, 'deleteUser']);
 Route::post('/fechaduras/{fechadura}/create_fechadura_user', [FechaduraController::class, 'createFechaduraUser']);
 Route::post('/fechaduras/{fechadura}/create_fechadura_setor', [FechaduraController::class, 'createFechaduraSetor']);
+Route::post('/fechaduras/{fechadura}/create_fechadura_pos', [FechaduraController::class, 'createFechaduraPos']);
 
 Route::get('/', function(){
     return redirect('/fechaduras');

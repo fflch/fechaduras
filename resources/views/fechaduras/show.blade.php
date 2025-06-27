@@ -26,6 +26,7 @@
     </div>
 
     @include('partials.form_setor')
+    @include('partials.form_posgrad')
     @include('partials.form_user')
     @include('partials.usuarios')
 
