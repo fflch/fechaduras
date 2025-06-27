@@ -10,7 +10,7 @@
             @csrf
             <div class="form-group">
                 <label for="foto">Selecione uma imagem</label>
-                <input type="file" class="form-control-file" id="foto" name="foto" required accept="image/*">
+                <input type="file" class="form-control-file" id="foto" name="foto" accept="image/*">
                 <small class="form-text text-muted">Tamanho máximo: 2MB</small>
             </div>
             <button type="submit" class="btn btn-primary">Enviar Foto</button>

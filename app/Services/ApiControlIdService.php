@@ -139,12 +139,12 @@ class ApiControlIdService
 
     public function uploadFoto($userId, $foto)
     {
-         $url = $this->fechadura->ip . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
+        $url = $this->fechadura->ip . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/octet-stream'
         ])->withBody(
-            file_get_contents($foto->path()), 
+            file_get_contents($foto->path()),
             'application/octet-stream'
         )->post($url);
 
@@ -163,7 +163,7 @@ class ApiControlIdService
 
         // 2. Atualizar o usuário com o hash
         $updateUrl = 'http://' . $this->fechadura->ip . '/modify_objects.fcgi?session=' . $this->sessao;
-        
+
         $response = Http::asJson()->post($updateUrl, [
             'object' => 'users',
             'values' => [

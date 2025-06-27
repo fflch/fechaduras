@@ -11,7 +11,7 @@ use App\Http\Requests\FechaduraRequest;
 use App\Models\User;
 use App\Services\UsuarioService;
 use Illuminate\Http\Request;
-use App\Services\ApiControlIdService; 
+use App\Services\ApiControlIdService;
 use App\Http\Requests\CadastrarFotoRequest;
 use App\Http\Requests\CadastrarSenhaRequest;
 
@@ -56,8 +56,6 @@ class FechaduraController extends Controller
         $response = Http::post($route, [
             "object" => "users"
         ]);
-
-        //dd($response->json()['users'] ?? []);
 
         $usuarios = $response->json()['users'] ?? [];
 
@@ -161,16 +159,16 @@ class FechaduraController extends Controller
     public function cadastrarFoto(CadastrarFotoRequest $request, Fechadura $fechadura, $userId)
     {
         $apiService = new ApiControlIdService($fechadura);
-        $success = $apiService->uploadFoto($userId, $request->file('foto'));
-        
+        $apiService->uploadFoto($userId, $request->file('foto'));
+
         return redirect("/fechaduras/{$fechadura->id}");
     }
 
     public function cadastrarSenha(CadastrarSenhaRequest $request, Fechadura $fechadura, $userId)
     {
         $apiService = new ApiControlIdService($fechadura);
-        $success = $apiService->cadastrarSenha($userId, $request->input('senha'));
-        
+        $apiService->cadastrarSenha($userId, $request->input('senha'));
+
         return redirect("/fechaduras/{$fechadura->id}");
     }
 }
