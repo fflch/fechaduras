@@ -37,11 +37,11 @@ class ApiControlIdService
         foreach ($faltantes as $codpes => $usuario) {
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
-                'values' => [
+                'values' => [[
                     'id' => (int)$codpes,
                     'name' => $usuario['nompes'] ?? $usuario['name'],
                     'registration' => (string)$codpes,
-                ]
+                ]]
             ]);
 
             if($response->successful()){
