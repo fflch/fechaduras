@@ -50,7 +50,6 @@ class FechaduraController extends Controller
 
     // Mostra uma fechadura específica e lista os usuários cadastrados nela
     public function show(Fechadura $fechadura) {
-        try {
         // 1 - Autenticação na API da fechadura
         $session = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
 
@@ -68,13 +67,6 @@ class FechaduraController extends Controller
             'usuarios' => $usuarios,
             'programas' => ReplicadoService::programasPosUnidade()
         ]);
-
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            return view('fechaduras.connection_error', [
-                'fechadura' => $fechadura,
-                'error' => $e->getMessage()
-            ]);
-        }
     }
 
     // Mostra formulário de edição

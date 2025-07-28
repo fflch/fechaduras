@@ -3,17 +3,21 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use App\Exceptions\ConnectionFailureException;
 
 class LockSessionService
 {
     // Obtém ou cria uma sessão ativa com a fechadura
     public static function conexao($ip, $usuario, $senha){
+        try {
             if (session()->has('lock:session')) {
-                return self::validade($ip, $usuario, $senha) 
+                return self::validade($ip)
                     ? session()->get('lock:session') : self::login($ip, $usuario, $senha);
             }
-
             return self::login($ip, $usuario, $senha);
+        } catch (\Exception $e) {
+            throw new ConnectionFailureException($ip);
+        }
     }
 
     // Realiza o login na API da fechadura
@@ -23,12 +27,12 @@ class LockSessionService
             'password' => $senha
         ]);
             session()->put('lock:session', $response->json('session'));
-            
+
             return $response->json('session');
     }
 
     // Verifica se a sessão atual ainda é válida
-    private static function validade($ip, $usuario, $senha){
+    private static function validade($ip){
         $session = session()->get('lock:session');
         $route = 'http://' . $ip . '/session_is_valid.fcgi?session=' . $session;
         $response = Http::post($route, ['session' => $session]);
