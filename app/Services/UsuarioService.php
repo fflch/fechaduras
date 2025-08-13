@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Uspdev\Replicado\Pessoa;
+use App\Services\ApiControlIdService;
 
 class UsuarioService
 {
@@ -21,6 +22,8 @@ class UsuarioService
             if ($user){
                 if (! $fechadura->usuarios->contains($user->id)) {
                     $fechadura->usuarios()->attach($user->id);
+
+                    self::cadastrarNaFechadura($fechadura, $codpes, $user->name);
                 }
             } else {
                 $pessoa = Pessoa::dump($codpes, ['nompesttd']);
@@ -28,8 +31,11 @@ class UsuarioService
                     $user = new User;
                     $user->name = $pessoa['nompesttd'];
                     $user->codpes = $codpes;
+                    $user->email = $codpes . '@usp.br';
                     $user->save();
                     $fechadura->usuarios()->attach($user->id);
+
+                    self::cadastrarNaFechadura($fechadura, $codpes, $pessoa['nompesttd']);
                 } else{
                     array_push($naoEncontrado, $codpes);
                 }
@@ -37,5 +43,11 @@ class UsuarioService
         }
 
         return $naoEncontrado;
+    }
+
+    private static function cadastrarNaFechadura($fechadura, $codpes, $nome) 
+    {
+        $apiService = new ApiControlIdService($fechadura);
+        $apiService->createUsers([$codpes => ['name' => $nome]]);
     }
 }
