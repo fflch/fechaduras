@@ -100,8 +100,8 @@ return [
 
     # login e logout
     'logout_method' => 'POST',
-    'logout_url' => config('app.url') . 'logout',
-    'login_url' => config('app.url') . '/login',
+    'logout_url' => 'logout',  
+    'login_url' => 'login',
 
     # menus
     'menu' => $menu,

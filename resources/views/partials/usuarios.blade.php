@@ -11,6 +11,7 @@
             <ul class="list-group">
                 @foreach ($fechadura->usuarios as $usuario)
                     <li class="list-group-item">
+                        @can('admin')
                         <form method="post" action="/fechaduras/{{ $fechadura->id }}/delete_user/{{ $usuario->id }}">
                             {{ $usuario->codpes }} - {{ $usuario->name }}
                             @csrf
@@ -18,6 +19,9 @@
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
+                        @else
+                        {{ $usuario->codpes }} - {{ $usuario->name }}
+                        @endcan
                     </li>
                 @endforeach
             </ul>

@@ -12,22 +12,29 @@
             <div class="mt-4">
                 <div class="row">
                     <a href="/fechaduras" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Voltar</a>
+                    @can('admin')
                     <a href="/fechaduras/{{ $fechadura->id }}/edit" class="btn btn-warning">Editar</a>
-                    <a href="/fechaduras/{{ $fechadura->id }}/logs" class="btn btn-info"><i class="fas fa-history"></i> Históricode acesso</a>
+                    @endcan
+                    <a href="/fechaduras/{{ $fechadura->id }}/logs" class="btn btn-info"><i class="fas fa-history"></i> Histórico de acesso</a>
+                    @can('admin')
                     <form method="post" action="/fechaduras/{{ $fechadura->id }}/sincronizar">
                         @csrf
                         <button type="submit" class="btn btn-primary" id="btn_sync">
                             <i class="fas fa-sync-alt"></i> Sincronizar dados
                         </button>
                     </form>
+                    @endcan
                 </div>
             </div>
         </div>
     </div>
 
+    @can('admin')
     @include('partials.form_setor')
     @include('partials.form_posgrad')
     @include('partials.form_user')
+    @endcan
+
     @include('partials.usuarios')
 
     <div class="card mt-4">
@@ -52,31 +59,39 @@
                             <td>
                                 @if($usuario['image_timestamp'] > 0)
                                     <span class="text-success">✔</span>
+                                    @can('admin')
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-secondary">
                                     Alterar foto
                                     </a>
+                                    @endcan
                                 @else
                                     <span class="text-danger">✖</span>
+                                    @can('admin')
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-primary">
                                     Cadastrar foto
                                     </a>
+                                    @endcan
                                 @endif
                             </td>
                             <td>
                                 @if(!empty($usuario['password']))
                                     <span class="text-success">✔</span>
+                                    @can('admin')
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-senha/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-secondary">
                                     Alterar senha
                                     </a>
+                                    @endcan
                                 @else
                                     <span class="text-danger">✖</span>
+                                    @can('admin')
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-senha/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-primary">
                                     Cadastrar senha
                                     </a>
+                                    @endcan
                                 @endif
                             </td>
                         </tr>

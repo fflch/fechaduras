@@ -4,10 +4,11 @@
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h3>Fechaduras Cadastradas</h3>
+        @can('admin')
         <a href="/fechaduras/create" class="btn btn-primary">
             + Nova Fechadura
         </a>
-        
+        @endcan
     </div>
     
     <div class="card-body">
