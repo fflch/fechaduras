@@ -13,12 +13,14 @@
             <a href="/fechaduras/{{ $fechadura->id }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Voltar
             </a>
+            @can('admin')
             <form action="/fechaduras/{{ $fechadura->id }}/logs" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-primary">
                     <i class="fas fa-sync-alt"></i> Atualizar Logs
                 </button>
             </form>
+            @endcan
         </div>
     </div>
 </div>

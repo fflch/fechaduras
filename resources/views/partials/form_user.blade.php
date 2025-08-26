@@ -1,3 +1,4 @@
+@can('admin')
 <form method="post" action="/fechaduras/{{ $fechadura->id }}/create_fechadura_user">
     @csrf
     <div class="card">
@@ -9,3 +10,4 @@
         </div>
     </div>
 </form>
+@endcan
