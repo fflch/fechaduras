@@ -14,12 +14,12 @@ class LogController extends Controller
     {
         $this->middleware('auth');
     }
-    
+
     // Método para logs
     public function logs(Fechadura $fechadura)
     {
         Gate::authorize('admin');
-        
+
         // Busca os logs do banco local, ordenados pelos mais recentes
         $logs = Log::where('fechadura_id', $fechadura->id)
                     ->orderBy('datahora', 'desc')
@@ -35,7 +35,7 @@ class LogController extends Controller
     public function updateLogs(Fechadura $fechadura)
     {
         Gate::authorize('admin');
-        
+
         $apiService = new ApiControlIdService($fechadura);
         $count = $apiService->updateLogs();
 

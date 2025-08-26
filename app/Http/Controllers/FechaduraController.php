@@ -26,7 +26,7 @@ class FechaduraController extends Controller
     {
         $this->middleware('auth');
     }
-    
+
     # Métodos CRUD
     // Mostra fechaduras cadastradas
     public function index() {
@@ -119,7 +119,7 @@ class FechaduraController extends Controller
 
     public function createFechaduraUser(Fechadura $fechadura, Request $request){
         Gate::authorize('admin');
-        
+
         if(!$request->codpes){
             request()->session()->flash('alert-danger', 'Informe número USP!');
             return back();
@@ -145,7 +145,7 @@ class FechaduraController extends Controller
 
     public function createFechaduraPos(Request $request, Fechadura $fechadura){
         Gate::authorize('admin');
-        
+
         CreateAreasAction::execute($request->areas, $fechadura);
         $request->session()->flash('alert-success', "Setor(es) inserido(s)");
         return back();
@@ -153,7 +153,7 @@ class FechaduraController extends Controller
 
     public function deleteUser(Fechadura $fechadura, User $user){
         Gate::authorize('admin');
-        
+
         $fechadura->usuarios()->detach($user->id);
         request()->session()->flash('alert-warning', "{$user->name} removido");
         return back();
@@ -164,7 +164,7 @@ class FechaduraController extends Controller
     public function sincronizar(Fechadura $fechadura)
     {
         Gate::authorize('admin');
-        
+
         SyncUsersAction::execute($fechadura);
         request()->session()->flash('alert-success','Dados sincronizados!');
         return back();
@@ -174,7 +174,7 @@ class FechaduraController extends Controller
     public function showCadastrarFoto(Fechadura $fechadura, $userId)
     {
         Gate::authorize('admin');
-        
+
         return view('fechaduras.cadastrar_foto', [
             'fechadura' => $fechadura,
             'userId' => $userId
@@ -185,7 +185,7 @@ class FechaduraController extends Controller
     public function showCadastrarSenha(Fechadura $fechadura, $userId)
     {
         Gate::authorize('admin');
-        
+
         return view('fechaduras.cadastrar_senha', [
             'fechadura' => $fechadura,
             'userId' => $userId
@@ -195,7 +195,7 @@ class FechaduraController extends Controller
     public function cadastrarFoto(CadastrarFotoRequest $request, Fechadura $fechadura, $userId)
     {
         Gate::authorize('admin');
-        
+
         $apiService = new ApiControlIdService($fechadura);
         $apiService->uploadFoto($userId, $request->file('foto'));
 
@@ -205,7 +205,7 @@ class FechaduraController extends Controller
     public function cadastrarSenha(CadastrarSenhaRequest $request, Fechadura $fechadura, $userId)
     {
         Gate::authorize('admin');
-        
+
         $apiService = new ApiControlIdService($fechadura);
         $apiService->cadastrarSenha($userId, $request->input('senha'));
 
