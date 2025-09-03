@@ -20,11 +20,13 @@ class ApiControlIdService
     public function __construct(Fechadura $fechadura)
     {
         $this->fechadura = $fechadura;
-        $this->sessao = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
+        $this->sessao = LockSessionService::conexao(
+            $fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha
+        );
     }
 
     public function loadUsers(){
-        $route = 'http://' . $this->fechadura->ip . '/load_objects.fcgi?session=' . $this->sessao;
+        $route = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/load_objects.fcgi?session=' . $this->sessao;
         $response = Http::post($route, [
             "object" => "users"
         ]);
@@ -76,7 +78,7 @@ class ApiControlIdService
     }
 
     public function loadUserGroups(){
-        $route = 'http://' . $this->fechadura->ip . '/load_objects.fcgi?session=' . $this->sessao;
+        $route = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/load_objects.fcgi?session=' . $this->sessao;
         $response = Http::post($route, [
             "object" => "user_groups"
         ]);
@@ -100,7 +102,7 @@ class ApiControlIdService
 
     public function loadLogs(){
         // 2 - Carregamento dos usuários cadastrados na fechadura
-        $route = 'http://' . $this->fechadura->ip . '/load_objects.fcgi?session=' . $this->sessao;
+        $route = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/load_objects.fcgi?session=' . $this->sessao;
         $response = Http::post($route, [
             "object" => "users"
         ]);
@@ -110,7 +112,7 @@ class ApiControlIdService
     // Atualiza os logs de acesso da fechadura no banco de dados local
     public function updateLogs()
     {
-        $route = 'http://' . $this->fechadura->ip . '/load_objects.fcgi?session=' . $this->sessao;
+        $route = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/load_objects.fcgi?session=' . $this->sessao;
         $response = Http::post($route, [
             "object" => "access_logs",
             "limit" => 300,
@@ -154,7 +156,7 @@ class ApiControlIdService
     public function cadastrarSenha($userId, $senha)
     {
         // 1. Gerar o hash da senha
-        $hashUrl = 'http://' . $this->fechadura->ip . '/user_hash_password.fcgi?session=' . $this->sessao;
+        $hashUrl = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/user_hash_password.fcgi?session=' . $this->sessao;
         $hashResponse = Http::asJson()->post($hashUrl, [
             'password' => (string)$senha
         ]);
@@ -162,7 +164,7 @@ class ApiControlIdService
         $hashedData = $hashResponse->json();
 
         // 2. Atualizar o usuário com o hash
-        $updateUrl = 'http://' . $this->fechadura->ip . '/modify_objects.fcgi?session=' . $this->sessao;
+        $updateUrl = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/modify_objects.fcgi?session=' . $this->sessao;
 
         $response = Http::asJson()->post($updateUrl, [
             'object' => 'users',

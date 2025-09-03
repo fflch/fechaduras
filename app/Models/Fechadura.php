@@ -8,6 +8,10 @@ use App\Models\Setor;
 
 class Fechadura extends Model
 {
+    protected $fillable = [
+        'local', 'ip', 'porta', 'usuario', 'senha', 'observacao'
+    ];
+    
     protected function local(): Attribute
     {
         return Attribute::make(

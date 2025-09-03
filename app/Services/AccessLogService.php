@@ -8,7 +8,7 @@ class AccessLogService
 {
     public static function getAccessLogs($ip, $session, $limit = 100, $lastTimestamp = null)
     {
-        $route = "http://{$ip}/load_objects.fcgi?session={$session}";
+        $route = "http://{$ip}:{$porta}/load_objects.fcgi?session={$session}";
         
         $params = [
             "object" => "access_logs",

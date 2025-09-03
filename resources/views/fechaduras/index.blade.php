@@ -25,6 +25,7 @@
                     <tr>
                         <th>Local</th>
                         <th>IP</th>
+                        <th>Porta</th> 
                         <th width="200px">Ações</th>
                     </tr>
                 </thead>
@@ -33,6 +34,7 @@
                     <tr>
                         <td>{{ $fechadura->local }}</td>
                         <td>{{ $fechadura->ip }}</td>
+                        <td>{{ $fechadura->porta }}</td>
                         <td class="d-flex gap-2">
                             <a href="/fechaduras/{{ $fechadura->id }}" class="btn btn-sm btn-info">Ver</a>
                             <a href="/fechaduras/{{ $fechadura->id }}/edit" class="btn btn-sm btn-warning">Editar</a>

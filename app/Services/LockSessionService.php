@@ -11,23 +11,23 @@ class LockSessionService
     private const LOCK_SESSION = 'lock:session:';
 
     // Obtém ou cria uma sessão ativa com a fechadura
-    public static function conexao($ip, $usuario, $senha){
+    public static function conexao($ip, $porta, $usuario, $senha){
         $lock_session = self::getLockSession($ip);
         try {
             if (session()->has($lock_session)) {
                 $session = session()->get($lock_session);
-                return self::validade($ip, $session)
-                    ? $session : self::login($ip, $usuario, $senha);
+                return self::validade($ip, $porta, $session)
+                    ? $session : self::login($ip, $porta, $usuario, $senha);
             }
-            return self::login($ip, $usuario, $senha);
+            return self::login($ip, $porta, $usuario, $senha);
         } catch (\Exception $e) {
             throw new ConnectionFailureException($ip);
         }
     }
 
     // Realiza o login na API da fechadura
-    private static function login($ip, $usuario, $senha){
-        $response = Http::post('http://' . $ip . '/login.fcgi', [
+    private static function login($ip, $porta, $usuario, $senha){
+        $response = Http::post('http://' . $ip . ':' . $porta . '/login.fcgi', [
             'login' => $usuario,
             'password' => $senha
         ]);
@@ -37,10 +37,10 @@ class LockSessionService
     }
 
     // Verifica se a sessão atual ainda é válida
-    private static function validade($ip, $session){
-        $route = 'http://' . $ip . '/session_is_valid.fcgi?session=' . $session;
+    private static function validade($ip, $porta, $session){
+        $route = 'http://' . $ip . ':' . $porta . '/session_is_valid.fcgi?session=' . $session;
         $response = Http::post($route, ['session' => $session]);
-
+        
         return $response->json('session_is_valid');
     }
 

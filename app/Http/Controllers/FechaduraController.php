@@ -52,6 +52,7 @@ class FechaduraController extends Controller
         $fechadura = new Fechadura();
         $fechadura->local = $request->local;
         $fechadura->ip = $request->ip;
+        $fechadura->porta = $request->porta;
         $fechadura->usuario = $request->usuario;
         $fechadura->senha = $request->senha;
         $fechadura->save();
@@ -64,10 +65,10 @@ class FechaduraController extends Controller
         Gate::authorize('admin');
 
         // 1 - Autenticação na API da fechadura
-        $session = LockSessionService::conexao($fechadura->ip, $fechadura->usuario, $fechadura->senha);
+        $session = LockSessionService::conexao($fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha);
 
         // 2 - Carregamento dos usuários cadastrados na fechadura
-        $route = 'http://' . $fechadura->ip . '/load_objects.fcgi?session=' . $session;
+        $route = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/load_objects.fcgi?session=' . $session;
         $response = Http::post($route, [
             "object" => "users"
         ]);
@@ -97,6 +98,7 @@ class FechaduraController extends Controller
 
         $fechadura->local = $request->local;
         $fechadura->ip = $request->ip;
+        $fechadura->porta = $request->porta;
         $fechadura->usuario = $request->usuario;
 
         // Só atualiza a senha se for informada

@@ -7,6 +7,7 @@
     
     <div class="card-body">
         <p><strong>IP:</strong> {{ $fechadura->ip }}</p>
+        <p><strong>Porta:</strong> {{ $fechadura->porta }}</p>
         <p><strong>Usuário API:</strong> {{ $fechadura->usuario }}</p>
 
         <div class="mt-4">
