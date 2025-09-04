@@ -31,6 +31,11 @@
                 <label class="form-label">IP</label>
                 <input type="text" class="form-control" name="ip" value="{{ old('ip') }}" placeholder="Ex: 10.172.2.143" required>
             </div>
+
+            <div class="mb-3">
+                <label class="form-label">Porta</label>
+                <input type="number" class="form-control" name="porta" value="{{ old('porta', 80) }}" required>
+            </div>
             
             <div class="mb-3">
                 <label class="form-label">Usuário API</label>

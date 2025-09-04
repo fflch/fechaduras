@@ -23,7 +23,8 @@ class FechaduraRequest extends FormRequest
     {
         $rules = [
             'local' => 'required',
-            'ip' => ['required', 'ipv4', 'unique:fechaduras,ip'], 
+            'ip' => ['required', 'ipv4', 'unique:fechaduras,ip'],
+            'porta' => 'required|integer|min:1|max:65535', 
             'usuario' => 'required',
             'senha' => 'sometimes|required'
         ];
