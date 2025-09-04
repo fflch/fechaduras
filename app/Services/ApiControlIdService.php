@@ -34,7 +34,7 @@ class ApiControlIdService
     }
 
     public function createUsers($faltantes){
-        $url = 'http://' . $this->fechadura->ip . '/create_objects.fcgi?session=' . $this->sessao;
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/create_objects.fcgi?session=' . $this->sessao;
 
         foreach ($faltantes as $codpes => $usuario) {
             $response = Http::asJson()->post($url, [
@@ -54,7 +54,7 @@ class ApiControlIdService
     }
 
     public function updateUsers($usuarios){
-        $url = 'http://' . $this->fechadura->ip . '/modify_objects.fcgi?session=' . $this->sessao;
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/modify_objects.fcgi?session=' . $this->sessao;
         foreach($usuarios as $codpes => $usuario){
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
@@ -87,7 +87,7 @@ class ApiControlIdService
     }
 
     public function createUserGroups($codpes, $group = 1){
-        $urlCreate = "http://" . $this->fechadura->ip . "/create_objects.fcgi?session=" . $this->sessao;
+        $urlCreate = "http://" . $this->fechadura->ip . ':' . $this->fechadura->porta . "/create_objects.fcgi?session=" . $this->sessao;
         Http::post($urlCreate, [
             'object' => 'user_groups',
             'fields' => ['user_id','group_id'],
@@ -141,7 +141,7 @@ class ApiControlIdService
 
     public function uploadFoto($userId, $foto)
     {
-        $url = $this->fechadura->ip . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
+        $url = $this->fechadura->ip . ':' . $this->fechadura->porta . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/octet-stream'
