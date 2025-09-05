@@ -150,7 +150,17 @@ class ApiControlIdService
             'application/octet-stream'
         )->post($url);
 
-        return $response->successful();
+        if ($response->successful()) {
+            return [
+                'success' => true,
+                'message' => 'Foto cadastrada com sucesso!'
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'A fechadura não aceitou a foto. Tente outra imagem.'
+        ];
     }
 
     public function cadastrarSenha($userId, $senha)
