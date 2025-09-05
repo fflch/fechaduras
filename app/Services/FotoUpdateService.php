@@ -9,6 +9,7 @@ use Uspdev\Wsfoto;
 
 class FotoUpdateService {
 
+    // Upload de foto automática do sistema USP, pega foto de WSfoto ao sincronizar 
     public static function updateFoto(Fechadura $fechadura, $codpes){
 
         $sessao = LockSessionService::conexao(
