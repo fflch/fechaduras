@@ -47,7 +47,7 @@ class ApiControlIdService
             ]);
 
             if($response->successful()){
-                FotoUpdateService::updateFoto($this->fechadura, $codpes);
+                FotoUpdateService::updateFoto($this->fechadura, $codpes, false);
                 $this->createUserGroups($codpes);
             }
         }
@@ -70,7 +70,7 @@ class ApiControlIdService
                 ]
             ]);
             if($response->successful()){
-                FotoUpdateService::updateFoto($this->fechadura, $codpes);
+                FotoUpdateService::updateFoto($this->fechadura, $codpes, false);
                 $this->createUserGroups($codpes);
 
             }
