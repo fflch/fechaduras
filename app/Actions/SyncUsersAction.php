@@ -4,52 +4,54 @@ namespace App\Actions;
 
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
-use App\Models\User;
 use Uspdev\Replicado\Pessoa;
+use App\Models\Setor;
+use App\Models\Area;
 
 class SyncUsersAction
 {
     public static function execute($fechadura){
         $api = new ApiControlIdService($fechadura);
         $loadUsers = collect($api->loadUsers());
-        $setores = $fechadura->setores->select('codset');
-        $areas = $fechadura->areas->select('codare');
+        $setores = $fechadura->setores->pluck('codset');
+        $areas = $fechadura->areas->pluck('codare');
         
-        // Obtem todos os usuários vinculados à fechadura 
-        $usuariosFechadura = $fechadura->usuarios()->get()->keyBy('codpes');
-
         // 1. Usuários dos setores configurados
         $usuariosSetor = $setores->isNotEmpty() ?
-            ReplicadoService::pessoa($setores->implode('codset', ',')) :
+            ReplicadoService::pessoa($setores->implode(',')) :
             collect();
 
         // 2. Alunos de pós-graduação das áreas configuradas
         $alunosPos = $areas->isNotEmpty() ?
-            ReplicadoService::retornaAlunosPos($areas->implode('codare',',')) :
+            ReplicadoService::retornaAlunosPos($areas->implode(',')) :
             collect();
 
-        // 3. Usuários cadastrados manualmente na fechadura (sem setor)
+        // 3. Usuários cadastrados manualmente
         $usuariosManuais = collect();
-        foreach ($usuariosFechadura as $codpes => $user) {
-            // Verifica se o usuário não está em nenhum setor/área configurado
-            $hasSetor = $fechadura->setores()->whereHas('usuarios', function($query) use ($codpes) {
-                $query->where('codpes', $codpes);
-            })->exists();
-            
-            $hasArea = $fechadura->areas()->whereHas('usuarios', function($query) use ($codpes) {
-                $query->where('codpes', $codpes);
-            })->exists();
-            
-            if (!$hasSetor && !$hasArea) {
-                // Busca informações do usuário no replicado
-                $pessoa = Pessoa::dump($codpes);
-                if ($pessoa) {
-                    $usuariosManuais[$codpes] = [
-                        'codpes' => $codpes,
-                        'nompes' => $pessoa['nompesttd'] ?? $pessoa['nompes'] ?? 'Nome não encontrado',
-                        'name' => $pessoa['nompesttd'] ?? $pessoa['nompes'] ?? 'Nome não encontrado'
-                    ];
-                }
+
+        // Obter todos os usuários de setores e áreas de uma vez
+        $todosUsuariosSetores = collect();
+        $todosUsuariosAreas = collect();
+
+        if ($fechadura->setores->isNotEmpty()) {
+            $todosUsuariosSetores = ReplicadoService::pessoa($fechadura->setores->pluck('codset')->implode(','));
+        }
+
+        if ($fechadura->areas->isNotEmpty()) {
+            $todosUsuariosAreas = ReplicadoService::retornaAlunosPos($fechadura->areas->pluck('codare')->implode(','));
+        }
+
+        // Juntar todos os usuários de setores e áreas
+        $todosUsuariosVinculados = $todosUsuariosSetores->merge($todosUsuariosAreas)->pluck('codpes');
+
+        // Agora filtrar usuários manuais
+        foreach ($fechadura->usuarios as $user) {
+            if (!$todosUsuariosVinculados->contains($user->codpes)) {
+                $usuariosManuais[$user->codpes] = [
+                    'codpes' => $user->codpes,
+                    'nompes' => $user->name,
+                    'name' => $user->name
+                ];
             }
         }
 
@@ -59,7 +61,7 @@ class SyncUsersAction
             ->merge($usuariosManuais)
             ->keyBy('codpes');
 
-        // Verifica usuários faltantes na fechadura
+        // Verificar usuários faltantes na fechadura
         $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
             ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))
             ->keyBy('codpes');
@@ -68,7 +70,7 @@ class SyncUsersAction
             $api->createUsers($faltantes);
         }
 
-        // Atualiza todos os usuários 
-        $api->updateUsers($usuarios);
+        // Atualizar todos os usuários (fotos só para quem não tem)
+        $api->updateUsers($usuarios, $loadUsers);
     }
 }

@@ -53,9 +53,20 @@ class ApiControlIdService
         }
     }
 
-    public function updateUsers($usuarios){
+    public function updateUsers($usuarios, $loadUsers = null){
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/modify_objects.fcgi?session=' . $this->sessao;
+        
+        // Identificar quais usuários já têm foto
+        $usersWithPhotos = [];
+        foreach ($loadUsers as $userFechadura) {
+            $codpes = $userFechadura['id'] ?? $userFechadura['registration'] ?? null;
+            if ($codpes && ($userFechadura['image_timestamp'] > 0)) {
+                $usersWithPhotos[$codpes] = true;
+            }
+        }
+        
         foreach($usuarios as $codpes => $usuario){
+            // Atualiza informações básicas do usuário
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
                 'values' => [
@@ -69,10 +80,14 @@ class ApiControlIdService
                     ]
                 ]
             ]);
+            
             if($response->successful()){
-                FotoUpdateService::updateFoto($this->fechadura, $codpes, false);
+                // Atualizar foto apenas se o usuário não tiver foto
+                if (!isset($usersWithPhotos[$codpes])) {
+                    FotoUpdateService::updateFoto($this->fechadura, $codpes, false);
+                }
+                
                 $this->createUserGroups($codpes);
-
             }
         }
     }
@@ -141,26 +156,58 @@ class ApiControlIdService
 
     public function uploadFoto($userId, $foto)
     {
-        $url = $this->fechadura->ip . ':' . $this->fechadura->porta . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/user_set_image.fcgi?user_id='. $userId ."&timestamp=".time()."&match=0&session=" . $this->sessao;
 
-        $response = Http::withHeaders([
+        $response = Http::timeout(30)->withHeaders([
             'Content-Type' => 'application/octet-stream'
         ])->withBody(
             file_get_contents($foto->path()),
             'application/octet-stream'
         )->post($url);
 
-        if ($response->successful()) {
+        // Analisa a resposta JSON 
+        $responseData = $response->json();
+        
+        if (isset($responseData['success']) && $responseData['success'] === true) {
             return [
                 'success' => true,
                 'message' => 'Foto cadastrada com sucesso!'
             ];
         }
 
+        // Se a fechadura rejeitou a foto, retorna a mensagem de erro específica
+        $errorMessage = 'A fechadura não aceitou a foto.';
+        
+        if (isset($responseData['errors']) && is_array($responseData['errors'])) {
+            $errors = [];
+            foreach ($responseData['errors'] as $error) {
+                $errors[] = $this->getErrorMessage($error['code'] ?? 0, $error['message']);
+            }
+            $errorMessage = implode(' ', $errors);
+        }
+
         return [
             'success' => false,
-            'message' => 'A fechadura não aceitou a foto. Tente outra imagem.'
+            'message' => $errorMessage
         ];
+    }
+
+    // Método para traduzir códigos de erro
+    private function getErrorMessage($code, $defaultMessage)
+    {
+        $errorMessages = [
+            1 => 'Erro nos parâmetros da requisição ou formato de imagem inválido.',
+            2 => 'Rosto não detectado na imagem.',
+            3 => 'Esta face já está cadastrada para outro usuário.',
+            4 => 'Rosto não está centralizado na imagem.',
+            5 => 'Rosto muito distante da câmera.',
+            6 => 'Rosto muito próximo da câmera.',
+            7 => 'Rosto não está posicionado corretamente (está torto).',
+            8 => 'Imagem com baixa nitidez.',
+            9 => 'Rosto muito próximo das bordas da imagem.'
+        ];
+
+        return $errorMessages[$code] ?? $defaultMessage;
     }
 
     public function cadastrarSenha($userId, $senha)

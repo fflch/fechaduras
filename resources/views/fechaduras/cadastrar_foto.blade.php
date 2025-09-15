@@ -6,23 +6,6 @@
         <h3>Cadastrar Foto para Usuário {{ $userId }}</h3>
     </div>
     <div class="card-body">
-        {{-- Mensagens de feedback --}}
-        @if(session('alert-success'))
-            <div class="alert alert-success alert-dismissible fade show">
-                <i class="fas fa-check-circle"></i> 
-                {{ session('alert-success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-        
-        @if(session('alert-danger'))
-            <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fas fa-exclamation-triangle"></i> 
-                {{ session('alert-danger') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
         <form method="POST" action="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $userId }}" enctype="multipart/form-data" id="fotoForm">
             @csrf
             
