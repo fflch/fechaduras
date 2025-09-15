@@ -55,17 +55,23 @@ class ApiControlIdService
 
     public function updateUsers($usuarios, $loadUsers = null){
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/modify_objects.fcgi?session=' . $this->sessao;
-        
         // Identificar quais usuários já têm foto
         $usersWithPhotos = [];
         foreach ($loadUsers as $userFechadura) {
-            $codpes = $userFechadura['id'] ?? $userFechadura['registration'] ?? null;
+            if (isset($userFechadura['registration']) && !empty($userFechadura['registration'])) {
+                $codpes = (int)$userFechadura['registration'];
+            } elseif (isset($userFechadura['id'])) {
+                $codpes = (int)$userFechadura['id'];
+            } else {
+                $codpes = null;
+            }
+            
             if ($codpes && ($userFechadura['image_timestamp'] > 0)) {
                 $usersWithPhotos[$codpes] = true;
             }
         }
-        
-        foreach($usuarios as $codpes => $usuario){
+    
+    foreach($usuarios as $codpes => $usuario){
             // Atualiza informações básicas do usuário
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
