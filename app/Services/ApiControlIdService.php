@@ -36,6 +36,8 @@ class ApiControlIdService
     public function createUsers($faltantes){
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/create_objects.fcgi?session=' . $this->sessao;
 
+        $loadUsers = $this->loadUsers();
+
         foreach ($faltantes as $codpes => $usuario) {
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
@@ -47,7 +49,7 @@ class ApiControlIdService
             ]);
 
             if($response->successful()){
-                FotoUpdateService::updateFoto($this->fechadura, $codpes, false);
+                FotoUpdateService::updateFoto($this->fechadura, $codpes, false, $loadUsers);
                 $this->createUserGroups($codpes);
             }
         }
@@ -55,9 +57,11 @@ class ApiControlIdService
 
     public function updateUsers($usuarios, $loadUsers = null){
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/modify_objects.fcgi?session=' . $this->sessao;
+        
         // Identificar quais usuários já têm foto
         $usersWithPhotos = [];
         foreach ($loadUsers as $userFechadura) {
+            // Lógica revisada com prioridade clara
             if (isset($userFechadura['registration']) && !empty($userFechadura['registration'])) {
                 $codpes = (int)$userFechadura['registration'];
             } elseif (isset($userFechadura['id'])) {
@@ -70,8 +74,8 @@ class ApiControlIdService
                 $usersWithPhotos[$codpes] = true;
             }
         }
-    
-    foreach($usuarios as $codpes => $usuario){
+        
+        foreach($usuarios as $codpes => $usuario){
             // Atualiza informações básicas do usuário
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
@@ -90,7 +94,7 @@ class ApiControlIdService
             if($response->successful()){
                 // Atualizar foto apenas se o usuário não tiver foto
                 if (!isset($usersWithPhotos[$codpes])) {
-                    FotoUpdateService::updateFoto($this->fechadura, $codpes, false);
+                    FotoUpdateService::updateFoto($this->fechadura, $codpes, false, $loadUsers);
                 }
                 
                 $this->createUserGroups($codpes);

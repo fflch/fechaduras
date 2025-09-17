@@ -16,35 +16,23 @@ class SyncUsersAction
         $setores = $fechadura->setores->pluck('codset');
         $areas = $fechadura->areas->pluck('codare');
         
-        // 1. Usuários dos setores configurados
-        $usuariosSetor = $setores->isNotEmpty() ?
-            ReplicadoService::pessoa($setores->implode(',')) :
-            collect();
+        // Busca usuários de setores e áreas
+        $usuariosSetor = collect();
+        $alunosPos = collect();
 
-        // 2. Alunos de pós-graduação das áreas configuradas
-        $alunosPos = $areas->isNotEmpty() ?
-            ReplicadoService::retornaAlunosPos($areas->implode(',')) :
-            collect();
+        if ($setores->isNotEmpty()) {
+            $usuariosSetor = ReplicadoService::pessoa($setores->implode(','));
+        }
 
-        // 3. Usuários cadastrados manualmente
+        if ($areas->isNotEmpty()) {
+            $alunosPos = ReplicadoService::retornaAlunosPos($areas->implode(','));
+        }
+
+        // Juntar todos os usuários vinculados (setores + áreas) para filtro
+        $todosUsuariosVinculados = $usuariosSetor->merge($alunosPos)->pluck('codpes');
+
+        // Filtrar usuários manuais (que não estão em setores/áreas)
         $usuariosManuais = collect();
-
-        // Obter todos os usuários de setores e áreas de uma vez
-        $todosUsuariosSetores = collect();
-        $todosUsuariosAreas = collect();
-
-        if ($fechadura->setores->isNotEmpty()) {
-            $todosUsuariosSetores = ReplicadoService::pessoa($fechadura->setores->pluck('codset')->implode(','));
-        }
-
-        if ($fechadura->areas->isNotEmpty()) {
-            $todosUsuariosAreas = ReplicadoService::retornaAlunosPos($fechadura->areas->pluck('codare')->implode(','));
-        }
-
-        // Juntar todos os usuários de setores e áreas
-        $todosUsuariosVinculados = $todosUsuariosSetores->merge($todosUsuariosAreas)->pluck('codpes');
-
-        // Agora filtrar usuários manuais
         foreach ($fechadura->usuarios as $user) {
             if (!$todosUsuariosVinculados->contains($user->codpes)) {
                 $usuariosManuais[$user->codpes] = [
@@ -55,7 +43,7 @@ class SyncUsersAction
             }
         }
 
-        // Combinar todos os usuários
+        // Combina todos os usuários
         $usuarios = $usuariosSetor
             ->merge($alunosPos)
             ->merge($usuariosManuais)

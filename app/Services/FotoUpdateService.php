@@ -14,12 +14,17 @@ class FotoUpdateService {
     {
         // Se não for forçado, verifica se já existe foto na fechadura
         if (!$force) {
-            $apiService = new ApiControlIdService($fechadura);
-            $usuarios = $apiService->loadUsers();
+            // Usa a lista de usuários fornecida ou carrega se não for fornecida
+            $usuarios = $usuariosFechadura ?? (new ApiControlIdService($fechadura))->loadUsers();
             
             // Encontra o usuário na lista da fechadura
             foreach ($usuarios as $usuario) {
-                if ($usuario['id'] == $codpes && $usuario['image_timestamp'] > 0) {
+                // Verifica tanto por ID quanto por registration para maior segurança
+                $userId = $usuario['id'] ?? null;
+                $userRegistration = $usuario['registration'] ?? null;
+                
+                if (($userId == $codpes || $userRegistration == $codpes) && 
+                    ($usuario['image_timestamp'] > 0)) {
                     // Usuário já tem foto, não sobrescreve
                     return ['skipped' => true, 'message' => 'Foto já existe, mantida'];
                 }
