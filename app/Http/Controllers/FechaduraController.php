@@ -199,9 +199,16 @@ class FechaduraController extends Controller
         Gate::authorize('admin');
 
         $apiService = new ApiControlIdService($fechadura);
-        $apiService->uploadFoto($userId, $request->file('foto'));
+        $result = $apiService->uploadFoto($userId, $request->file('foto'));
 
-        return redirect("/fechaduras/{$fechadura->id}");
+        if ($result['success']) {
+            return redirect("/fechaduras/{$fechadura->id}")
+                ->with('alert-success', $result['message']);
+        }
+
+        return back()
+            ->with('alert-danger', $result['message'])
+            ->withInput();
     }
 
     public function cadastrarSenha(CadastrarSenhaRequest $request, Fechadura $fechadura, $userId)

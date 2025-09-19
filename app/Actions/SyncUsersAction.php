@@ -7,38 +7,61 @@ use App\Services\ReplicadoService;
 
 class SyncUsersAction
 {
-    /**
-     * Create a new class instance.
-     */
-
     public static function execute($fechadura){
         $api = new ApiControlIdService($fechadura);
         $loadUsers = collect($api->loadUsers());
-        $setores = $fechadura->setores->select('codset');
-        $areas = $fechadura->areas->select('codare');
-        $usuariosFechadura = $fechadura->usuarios->select(['codpes','name'])->keyBy('codpes');
+        $setores = $fechadura->setores->pluck('codset');
+        $areas = $fechadura->areas->pluck('codare');
 
-        $usuariosSetor = $setores->isNotEmpty() ?
-            ReplicadoService::pessoa($setores->implode('codset', ',')) :
-            collect();
+        // Busca usuários de setores e áreas
+        $usuariosSetor = collect();
+        $alunosPos = collect();
 
-        $alunosPos = $areas->isNotEmpty() ?
-            ReplicadoService::retornaAlunosPos($areas->implode('codare',',')) :
-            collect();
+        if ($setores->isNotEmpty()) {
+            $usuariosSetor = ReplicadoService::pessoa($setores->implode(','));
+        }
 
-        $usuarios = $alunosPos->merge($usuariosSetor)
-            ->merge($usuariosFechadura)
+        if ($areas->isNotEmpty()) {
+            $alunosPos = ReplicadoService::retornaAlunosPos($areas->implode(','));
+        }
+
+        // Juntar todos os usuários vinculados (setores + áreas) para filtro
+        $todosUsuariosVinculados = $usuariosSetor->merge($alunosPos)->pluck('codpes');
+
+        // Filtrar usuários manuais (que não estão em setores/áreas)
+        $usuariosManuais = collect();
+        foreach ($fechadura->usuarios as $user) {
+            if (!$todosUsuariosVinculados->contains($user->codpes)) {
+                $usuariosManuais[$user->codpes] = [
+                    'codpes' => $user->codpes,
+                    'nompes' => $user->name,
+                    'name' => $user->name
+                ];
+            }
+        }
+
+        // Combina todos os usuários
+        $usuarios = $usuariosSetor
+            ->merge($alunosPos)
+            ->merge($usuariosManuais)
             ->keyBy('codpes');
 
-        //usa ID ou matricula para verificar se o usuário existe
+        // Verificar usuários faltantes na fechadura
         $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
-            ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))->keyBy('codpes');
+            ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))
+            ->keyBy('codpes');
 
         if ($faltantes->isNotEmpty()) {
             $api->createUsers($faltantes);
         }
 
-        $api->updateUsers($usuarios);
+        // Atualizar todos os usuários (fotos só para quem não tem)
+        $usersWithoutPhotos = [];
+        foreach ($loadUsers as $userFechadura) {
+            if ( $userFechadura['image_timestamp'] == 0 ) {
+                $usersWithoutPhotos[] = $userFechadura['registration'] ?? $userFechadura['id'];
+            }
+        }
+        $api->updateUsers($usuarios, $usersWithoutPhotos);
     }
-
 }
