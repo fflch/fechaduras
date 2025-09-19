@@ -9,29 +9,9 @@ use Uspdev\Wsfoto;
 
 class FotoUpdateService {
 
-    // Upload de foto automática do sistema USP, pega foto de WSfoto ao sincronizar 
-    public static function updateFoto(Fechadura $fechadura, $codpes, $force = false)
+    // Upload de foto automática do sistema USP, pega foto de WSfoto ao sincronizar
+    public static function updateFoto(Fechadura $fechadura, $codpes)
     {
-        // Se não for forçado, verifica se já existe foto na fechadura
-        if (!$force) {
-            // Usa a lista de usuários fornecida ou carrega se não for fornecida
-            $usuarios = $usuariosFechadura ?? (new ApiControlIdService($fechadura))->loadUsers();
-            
-            // Encontra o usuário na lista da fechadura
-            foreach ($usuarios as $usuario) {
-                // Verifica tanto por ID quanto por registration para maior segurança
-                $userId = $usuario['id'] ?? null;
-                $userRegistration = $usuario['registration'] ?? null;
-                
-                if (($userId == $codpes || $userRegistration == $codpes) && 
-                    ($usuario['image_timestamp'] > 0)) {
-                    // Usuário já tem foto, não sobrescreve
-                    return ['skipped' => true, 'message' => 'Foto já existe, mantida'];
-                }
-            }
-        }
-
-        // Se chegou aqui, ou é forçado ou não tem foto ainda
         $sessao = LockSessionService::conexao(
             $fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha
         );

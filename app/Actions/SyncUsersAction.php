@@ -4,9 +4,6 @@ namespace App\Actions;
 
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
-use Uspdev\Replicado\Pessoa;
-use App\Models\Setor;
-use App\Models\Area;
 
 class SyncUsersAction
 {
@@ -15,7 +12,7 @@ class SyncUsersAction
         $loadUsers = collect($api->loadUsers());
         $setores = $fechadura->setores->pluck('codset');
         $areas = $fechadura->areas->pluck('codare');
-        
+
         // Busca usuários de setores e áreas
         $usuariosSetor = collect();
         $alunosPos = collect();
@@ -59,6 +56,12 @@ class SyncUsersAction
         }
 
         // Atualizar todos os usuários (fotos só para quem não tem)
-        $api->updateUsers($usuarios, $loadUsers);
+        $usersWithoutPhotos = [];
+        foreach ($loadUsers as $userFechadura) {
+            if ( $userFechadura['image_timestamp'] == 0 ) {
+                $usersWithoutPhotos[] = $userFechadura['registration'] ?? $userFechadura['id'];
+            }
+        }
+        $api->updateUsers($usuarios, $usersWithoutPhotos);
     }
 }

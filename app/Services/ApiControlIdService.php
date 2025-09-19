@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Actions\CreateGroupAction;
 use App\Services\LockSessionService;
 use \App\Models\Log;
 use App\Models\Fechadura;
@@ -55,26 +54,9 @@ class ApiControlIdService
         }
     }
 
-    public function updateUsers($usuarios, $loadUsers = null){
+    public function updateUsers($usuarios, $usersWithoutPhotos){
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/modify_objects.fcgi?session=' . $this->sessao;
-        
-        // Identificar quais usuários já têm foto
-        $usersWithPhotos = [];
-        foreach ($loadUsers as $userFechadura) {
-            // Lógica revisada com prioridade clara
-            if (isset($userFechadura['registration']) && !empty($userFechadura['registration'])) {
-                $codpes = (int)$userFechadura['registration'];
-            } elseif (isset($userFechadura['id'])) {
-                $codpes = (int)$userFechadura['id'];
-            } else {
-                $codpes = null;
-            }
-            
-            if ($codpes && ($userFechadura['image_timestamp'] > 0)) {
-                $usersWithPhotos[$codpes] = true;
-            }
-        }
-        
+
         foreach($usuarios as $codpes => $usuario){
             // Atualiza informações básicas do usuário
             $response = Http::asJson()->post($url, [
@@ -90,13 +72,13 @@ class ApiControlIdService
                     ]
                 ]
             ]);
-            
+
             if($response->successful()){
                 // Atualizar foto apenas se o usuário não tiver foto
-                if (!isset($usersWithPhotos[$codpes])) {
-                    FotoUpdateService::updateFoto($this->fechadura, $codpes, false, $loadUsers);
+                if (in_array($codpes, $usersWithoutPhotos)) {
+                    FotoUpdateService::updateFoto($this->fechadura, $codpes);
                 }
-                
+
                 $this->createUserGroups($codpes);
             }
         }
@@ -175,35 +157,17 @@ class ApiControlIdService
             'application/octet-stream'
         )->post($url);
 
-        // Analisa a resposta JSON 
-        $responseData = $response->json();
-        
-        if (isset($responseData['success']) && $responseData['success'] === true) {
-            return [
-                'success' => true,
-                'message' => 'Foto cadastrada com sucesso!'
-            ];
-        }
-
-        // Se a fechadura rejeitou a foto, retorna a mensagem de erro específica
-        $errorMessage = 'A fechadura não aceitou a foto.';
-        
-        if (isset($responseData['errors']) && is_array($responseData['errors'])) {
-            $errors = [];
-            foreach ($responseData['errors'] as $error) {
-                $errors[] = $this->getErrorMessage($error['code'] ?? 0, $error['message']);
-            }
-            $errorMessage = implode(' ', $errors);
-        }
-
+        // Analisa a resposta JSON
         return [
-            'success' => false,
-            'message' => $errorMessage
+            'success' => $response->json('success'),
+            'message' => $response->json('success') ?
+                'Foto cadastrada com sucesso.' :
+                $this->getErrorMessage($response->json('errors'))
         ];
     }
 
     // Método para traduzir códigos de erro
-    private function getErrorMessage($code, $defaultMessage)
+    private function getErrorMessage(array $errors)
     {
         $errorMessages = [
             1 => 'Erro nos parâmetros da requisição ou formato de imagem inválido.',
@@ -217,7 +181,9 @@ class ApiControlIdService
             9 => 'Rosto muito próximo das bordas da imagem.'
         ];
 
-        return $errorMessages[$code] ?? $defaultMessage;
+        $error = head($errors);
+
+        return $errorMessages[$error['code']] ?? 'Erro ao cadastrar a foto, erro não definido.';
     }
 
     public function cadastrarSenha($userId, $senha)
