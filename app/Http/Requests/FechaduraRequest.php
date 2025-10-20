@@ -28,10 +28,6 @@ class FechaduraRequest extends FormRequest
             'usuario' => 'required',
             'senha' => 'sometimes|required'
         ];
-
-        if ($this->method() == 'PATCH' || $this->method() == 'PUT') {
-            $rules['ip'] = ['required', 'ipv4', 'unique:fechaduras,ip,' . $this->fechadura->id];
-        }
     
         return $rules;
     }
