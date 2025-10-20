@@ -23,7 +23,7 @@ class FechaduraRequest extends FormRequest
     {
         $rules = [
             'local' => 'required',
-            'ip' => ['required', 'ipv4', 'unique:fechaduras,ip'],
+            'ip' => ['required', 'ipv4'],
             'porta' => 'required|integer|min:1|max:65535', 
             'usuario' => 'required',
             'senha' => 'sometimes|required'
@@ -49,7 +49,6 @@ class FechaduraRequest extends FormRequest
             'local.required' => 'O local da fechadura é obrigatório',
             'ip.required' => 'O IP é obrigatório',
             'ip.ipv4' => 'Digite um IP válido',
-            'ip.unique' => 'Este IP já está cadastrado',
             'usuario.required' => 'O usuário é obrigatório',
             'senha.required' => 'A senha é obrigatória'
         ];
