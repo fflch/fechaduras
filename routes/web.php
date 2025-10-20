@@ -3,6 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FechaduraController;
 use App\Http\Controllers\LogController;
+use App\Http\Controllers\IndexController;
+
+Route::get('/',[indexController::class, 'index']);
 
 // Rotas CRUD
 Route::get('/fechaduras',[FechaduraController::class, 'index']);
@@ -28,7 +31,3 @@ Route::post('/fechaduras/{fechadura}/delete_user/{user}',[FechaduraController::c
 Route::post('/fechaduras/{fechadura}/create_fechadura_user', [FechaduraController::class, 'createFechaduraUser']);
 Route::post('/fechaduras/{fechadura}/create_fechadura_setor', [FechaduraController::class, 'createFechaduraSetor']);
 Route::post('/fechaduras/{fechadura}/create_fechadura_pos', [FechaduraController::class, 'createFechaduraPos']);
-
-Route::get('/', function(){
-    return redirect('/fechaduras');
-});
