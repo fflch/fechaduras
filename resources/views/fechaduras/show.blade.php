@@ -16,8 +16,8 @@
                     @can('admin')
                     <a href="/fechaduras/{{ $fechadura->id }}/edit" class="btn btn-warning">Editar</a>
                     @endcan
+                    @can('adminFechadura', $fechadura)
                     <a href="/fechaduras/{{ $fechadura->id }}/logs" class="btn btn-info"><i class="fas fa-history"></i> Histórico de acesso</a>
-                    @can('admin')
                     <form method="post" action="/fechaduras/{{ $fechadura->id }}/sincronizar">
                         @csrf
                         <button type="submit" class="btn btn-primary" id="btn_sync">
@@ -30,13 +30,16 @@
         </div>
     </div>
 
-    @can('admin')
     @include('partials.form_setor')
     @include('partials.form_posgrad')
     @include('partials.form_user')
-    @endcan
 
     @include('partials.usuarios')
+
+    @include('partials.form_usuario_externo')
+    @include('partials.usuarios_externos')
+    @include('partials.form_admins')
+    @include('partials.admins')
 
     <div class="card mt-4">
         <div class="card-header">
@@ -60,7 +63,7 @@
                             <td>
                                 @if($usuario['image_timestamp'] > 0)
                                     <span class="text-success">✔</span>
-                                    @can('admin')
+                                    @can('adminFechadura', $fechadura)
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-secondary">
                                     Alterar foto
@@ -68,7 +71,7 @@
                                     @endcan
                                 @else
                                     <span class="text-danger">✖</span>
-                                    @can('admin')
+                                    @can('adminFechadura', $fechadura)
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-primary">
                                     Cadastrar foto
@@ -79,7 +82,7 @@
                             <td>
                                 @if(!empty($usuario['password']))
                                     <span class="text-success">✔</span>
-                                    @can('admin')
+                                    @can('adminFechadura', $fechadura)
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-senha/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-secondary">
                                     Alterar senha
@@ -87,7 +90,7 @@
                                     @endcan
                                 @else
                                     <span class="text-danger">✖</span>
-                                    @can('admin')
+                                    @can('adminFechadura', $fechadura)
                                     <a href="/fechaduras/{{ $fechadura->id }}/cadastrar-senha/{{ $usuario['id'] }}" 
                                     class="btn btn-sm btn-outline-primary">
                                     Cadastrar senha
