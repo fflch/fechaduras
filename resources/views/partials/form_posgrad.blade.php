@@ -1,4 +1,4 @@
-@can('admin')
+@can('adminFechadura', $fechadura)
 <form method="post" action="/fechaduras/{{ $fechadura->id }}/create_fechadura_pos">
     @csrf
     <div class="card">

@@ -4,7 +4,7 @@ $menu = [
     [
         'text' => '<i class="fas fa-home"></i> Fechaduras',
         'url' => 'fechaduras',
-        'can' => 'admin'
+        'can' => 'logado'
     ],
 ];
 

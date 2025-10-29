@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
+use App\Services\FotoUpdateService;
 
 class SyncUsersAction
 {
@@ -40,10 +41,26 @@ class SyncUsersAction
             }
         }
 
+        // Adicionar usuários externos
+        $usuariosExternos = collect();
+        foreach ($fechadura->usuariosExternos as $usuarioExterno) {
+            $externalId = 10000 + $usuarioExterno->id;
+            
+            $usuariosExternos[$externalId] = [
+                'id' => $externalId,
+                'codpes' => $externalId,
+                'nompes' => $usuarioExterno->nome . ' - ' . $usuarioExterno->vinculo,
+                'name' => $usuarioExterno->nome . ' - ' . $usuarioExterno->vinculo,
+                'is_external' => true,
+                'usuario_externo' => $usuarioExterno
+            ];
+        }
+
         // Combina todos os usuários
         $usuarios = $usuariosSetor
             ->merge($alunosPos)
             ->merge($usuariosManuais)
+            ->merge($usuariosExternos)
             ->keyBy('codpes');
 
         // Verificar usuários faltantes na fechadura
@@ -58,10 +75,11 @@ class SyncUsersAction
         // Atualizar todos os usuários (fotos só para quem não tem)
         $usersWithoutPhotos = [];
         foreach ($loadUsers as $userFechadura) {
-            if ( $userFechadura['image_timestamp'] == 0 ) {
+            if ($userFechadura['image_timestamp'] == 0) {
                 $usersWithoutPhotos[] = $userFechadura['registration'] ?? $userFechadura['id'];
             }
         }
+        
         $api->updateUsers($usuarios, $usersWithoutPhotos);
     }
 }

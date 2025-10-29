@@ -36,4 +36,13 @@ class Fechadura extends Model
         return $this->belongsToMany(User::class);
     }
 
+    public function usuariosExternos()
+    {
+        return $this->hasMany(UsuarioExterno::class);
+    }
+
+    public function admins()
+    {
+        return $this->hasMany(Admin::class);
+    }
 }

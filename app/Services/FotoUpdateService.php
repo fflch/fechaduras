@@ -9,16 +9,18 @@ use Uspdev\Wsfoto;
 
 class FotoUpdateService {
 
-    // Upload de foto automática do sistema USP, pega foto de WSfoto ao sincronizar
-    public static function updateFoto(Fechadura $fechadura, $codpes)
+    // Upload de foto automática do sistema USP
+    public static function updateFoto(Fechadura $fechadura, $codpes, $fotoPath = null)
     {
         $sessao = LockSessionService::conexao(
             $fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha
         );
 
-        $url = $fechadura->ip . ':' . $fechadura->porta . '/user_set_image.fcgi?user_id='. $codpes ."&timestamp=".time()."&match=0&session=" . $sessao;
+        $url = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/user_set_image.fcgi?user_id='. $codpes .'&timestamp='.time().'&match=0&session=' . $sessao;
 
-        $foto = Wsfoto::obter($codpes);
+        $foto = $fotoPath ?
+            file_get_contents(storage_path('app/public/' . $fotoPath)) :
+            Wsfoto::obter($codpes);
         $img = base64_decode($foto);
 
         $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
@@ -27,4 +29,5 @@ class FotoUpdateService {
 
         return $response;
     }
+
 }
