@@ -10,7 +10,7 @@ use Uspdev\Wsfoto;
 class FotoUpdateService {
 
     // Upload de foto automática do sistema USP
-    public static function updateFoto(Fechadura $fechadura, $codpes)
+    public static function updateFoto(Fechadura $fechadura, $codpes, $fotoPath = null)
     {
         $sessao = LockSessionService::conexao(
             $fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha
@@ -18,7 +18,9 @@ class FotoUpdateService {
 
         $url = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/user_set_image.fcgi?user_id='. $codpes .'&timestamp='.time().'&match=0&session=' . $sessao;
 
-        $foto = Wsfoto::obter($codpes);
+        $foto = $fotoPath ?
+            file_get_contents(storage_path('app/public/' . $fotoPath)) :
+            Wsfoto::obter($codpes);
         $img = base64_decode($foto);
 
         $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
@@ -28,21 +30,4 @@ class FotoUpdateService {
         return $response;
     }
 
-    // Upload de foto para usuários externos (na sincronização)
-    public static function updateFotoExterna(Fechadura $fechadura, $userId, $fotoPath)
-    {
-        $sessao = LockSessionService::conexao(
-            $fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha
-        );
-
-        $url = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/user_set_image.fcgi?user_id='. $userId .'&timestamp='.time().'&match=0&session=' . $sessao;
-
-        $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
-            ->withBody(
-                file_get_contents(storage_path('app/public/' . $fotoPath)),
-                'application/octet-stream'
-            )->post($url);
-
-        return $response;
-    }
 }

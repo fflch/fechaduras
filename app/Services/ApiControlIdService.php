@@ -46,15 +46,17 @@ class ApiControlIdService
             ]);
 
             if($response->successful()){
+
+                $fotoPath = $usuario['is_external'] ? $usuario['usuario_externo']->foto : null;
                 // Para usuários USP, usa foto do WSfoto
-                if (!isset($usuario['is_external'])) {
-                    FotoUpdateService::updateFoto($this->fechadura, $codpes);
-                } 
+                /* if (!isset($usuario['is_external'])) { */
+                FotoUpdateService::updateFoto($this->fechadura, $codpes, $fotoPath);
+                /* }  */
                 // Para usuários externos, usa foto salva localmente
-                else if (isset($usuario['usuario_externo']) && $usuario['usuario_externo']->foto) {
-                    FotoUpdateService::updateFotoExterna($this->fechadura, $codpes, $usuario['usuario_externo']->foto);
-                }
-                
+                /* else if (isset($usuario['usuario_externo']) && $usuario['usuario_externo']->foto) { */
+                /*     FotoUpdateService::updateFotoExterna($this->fechadura, $codpes, $usuario['usuario_externo']->foto); */
+                /* } */
+
                 $this->createUserGroups($codpes);
             }
         }
@@ -199,4 +201,50 @@ class ApiControlIdService
 
         return $response->successful();
     }
+
+    public function testarFoto($fechadura, $foto)
+    {
+        $url = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/user_test_image.fcgi?session=' . $this->sessao;
+
+        $fileContents = file_get_contents($foto);
+
+        $response = Http::timeout(30)->withHeaders([
+            'Content-Type' => 'application/octet-stream'
+        ])->withBody(
+            $fileContents,
+            'application/octet-stream'
+        )->post($url);
+
+        $data = $response->json();
+
+        return [
+            'success' => $data['success'] ?? false,
+            'message' => $data['success'] ?
+                'Foto aprovada no teste de qualidade.' :
+                $this->getErrorMessage($data['errors'] ?? []),
+            'scores' => $data['scores'] ?? null,
+            'errors' => $data['errors'] ?? []
+        ];
+    }
+
+    // Método para traduzir códigos de erro
+    private function getErrorMessage(array $errors)
+    {
+        $errorMessages = [
+            1 => 'Erro nos parâmetros da requisição ou formato de imagem inválido.',
+            2 => 'Rosto não detectado na imagem.',
+            3 => 'Esta face já está cadastrada para outro usuário.',
+            4 => 'Rosto não está centralizado na imagem.',
+            5 => 'Rosto muito distante da câmera.',
+            6 => 'Rosto muito próximo da câmera.',
+            7 => 'Rosto não está posicionado corretamente (está torto).',
+            8 => 'Imagem com baixa nitidez.',
+            9 => 'Rosto muito próximo das bordas da imagem.'
+        ];
+
+        $error = head($errors);
+
+        return $errorMessages[$error['code']] ?? 'Erro ao cadastrar a foto, erro não definido.';
+    }
+
 }

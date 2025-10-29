@@ -17,9 +17,6 @@ use App\Http\Requests\CadastrarFotoRequest;
 use App\Http\Requests\CadastrarSenhaRequest;
 use App\Services\ReplicadoService;
 use Illuminate\Support\Facades\Gate;
-use App\Models\UsuarioExterno;
-use App\Http\Requests\UsuarioExternoRequest;
-use App\Services\TestarFotoService;
 use App\Models\Admin;
 
 class FechaduraController extends Controller
@@ -87,7 +84,7 @@ class FechaduraController extends Controller
         ]);
 
         $usuarios = $response->json()['users'] ?? [];
-        
+
         // Carrega usuários externos
         $usuariosExternos = $fechadura->usuariosExternos()->with('cadastradoPor')->get();
 
@@ -219,8 +216,8 @@ class FechaduraController extends Controller
     {
         Gate::authorize('adminFechadura', $fechadura);
 
-        $testarFotoService = new TestarFotoService(); 
-        $result = $testarFotoService->execute($fechadura, $request->file('foto'), $userId);
+        $apiService = new ApiControlIdService($fechadura);
+        $result = $apiService->uploadFoto($userId, $request->file('foto'));
 
         if ($result['success']) {
             return redirect("/fechaduras/{$fechadura->id}")
@@ -242,48 +239,5 @@ class FechaduraController extends Controller
         return redirect("/fechaduras/{$fechadura->id}");
     }
 
-    // Cadastrar usuário externo
-    public function createUsuarioExterno(UsuarioExternoRequest $request, Fechadura $fechadura)
-    {
-        Gate::authorize('adminFechadura', $fechadura);
-
-        // Testa a foto antes de criar o usuário
-        if ($request->hasFile('foto')) {
-            $testarFotoService = new TestarFotoService(); 
-            $resultadoTeste = $testarFotoService->execute($fechadura, $request->file('foto'));
-            
-            if (!$resultadoTeste['success']) {
-                return back()
-                    ->with('alert-danger', 'Foto não aprovada: ' . $resultadoTeste['message'])
-                    ->withInput();
-            }
-        }
-
-        // Cria o usuário externo
-        $usuarioExterno = new UsuarioExterno();
-        $usuarioExterno->nome = $request->nome;
-        $usuarioExterno->fechadura_id = $fechadura->id;
-        $usuarioExterno->user_id = auth()->id();
-        $usuarioExterno->vinculo = $request->vinculo;
-        $usuarioExterno->observacao = $request->observacao;
-
-        // Upload da foto (já testada e aprovada)
-        if ($request->hasFile('foto')) {
-            $fotoPath = $request->file('foto')->store('usuarios_externos', 'public');
-            $usuarioExterno->foto = $fotoPath;
-        }
-
-        $usuarioExterno->save();
-
-        return back()->with('alert-success', 'Usuário externo cadastrado com sucesso!');
-    }
-
-    // Remover usuário externo
-    public function deleteUsuarioExterno(Fechadura $fechadura, UsuarioExterno $usuarioExterno)
-    {
-        Gate::authorize('adminFechadura', $fechadura);
-        $usuarioExterno->delete();
-        return back()->with('alert-success', 'Usuário externo removido do sistema!');
-    }
 
 }
