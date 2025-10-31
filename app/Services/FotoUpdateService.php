@@ -21,7 +21,7 @@ class FotoUpdateService {
         $foto = $fotoPath ?
             file_get_contents(storage_path('app/public/' . $fotoPath)) :
             Wsfoto::obter($codpes);
-        $img = base64_decode($foto);
+        $img = $fotoPath ? $foto : base64_decode($foto);
 
         $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
             ->withBody($img, 'application/octet-stream')
@@ -29,5 +29,4 @@ class FotoUpdateService {
 
         return $response;
     }
-
 }

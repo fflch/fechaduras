@@ -63,6 +63,14 @@ class SyncUsersAction
             ->merge($usuariosExternos)
             ->keyBy('codpes');
 
+        // Chave is_external para todos usuários
+        $usuarios = $usuarios->map(function ($usuario) {
+            if (!isset($usuario['is_external'])) {
+                $usuario['is_external'] = false;
+            }
+            return $usuario;
+        });
+
         // Verificar usuários faltantes na fechadura
         $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
             ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))
