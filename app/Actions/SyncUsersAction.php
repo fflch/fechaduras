@@ -45,7 +45,7 @@ class SyncUsersAction
         $usuariosExternos = collect();
         foreach ($fechadura->usuariosExternos as $usuarioExterno) {
             $externalId = 10000 + $usuarioExterno->id;
-            
+
             $usuariosExternos[$externalId] = [
                 'id' => $externalId,
                 'codpes' => $externalId,
@@ -63,14 +63,6 @@ class SyncUsersAction
             ->merge($usuariosExternos)
             ->keyBy('codpes');
 
-        // Chave is_external para todos usuários
-        $usuarios = $usuarios->map(function ($usuario) {
-            if (!isset($usuario['is_external'])) {
-                $usuario['is_external'] = false;
-            }
-            return $usuario;
-        });
-
         // Verificar usuários faltantes na fechadura
         $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
             ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))
@@ -87,7 +79,7 @@ class SyncUsersAction
                 $usersWithoutPhotos[] = $userFechadura['registration'] ?? $userFechadura['id'];
             }
         }
-        
+
         $api->updateUsers($usuarios, $usersWithoutPhotos);
     }
 }
