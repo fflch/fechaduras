@@ -40,7 +40,7 @@ class LockSessionService
     private static function validade($ip, $porta, $session){
         $route = 'http://' . $ip . ':' . $porta . '/session_is_valid.fcgi?session=' . $session;
         $response = Http::post($route, ['session' => $session]);
-        
+
         return $response->json('session_is_valid');
     }
 

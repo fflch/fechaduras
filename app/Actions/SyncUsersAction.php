@@ -45,7 +45,7 @@ class SyncUsersAction
         $usuariosExternos = collect();
         foreach ($fechadura->usuariosExternos as $usuarioExterno) {
             $externalId = 10000 + $usuarioExterno->id;
-            
+
             $usuariosExternos[$externalId] = [
                 'id' => $externalId,
                 'codpes' => $externalId,
@@ -79,7 +79,7 @@ class SyncUsersAction
                 $usersWithoutPhotos[] = $userFechadura['registration'] ?? $userFechadura['id'];
             }
         }
-        
+
         $api->updateUsers($usuarios, $usersWithoutPhotos);
     }
 }

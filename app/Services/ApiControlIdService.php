@@ -6,6 +6,7 @@ use App\Services\LockSessionService;
 use \App\Models\Log;
 use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Arr;
 
 class ApiControlIdService
 {
@@ -36,6 +37,7 @@ class ApiControlIdService
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/create_objects.fcgi?session=' . $this->sessao;
 
         foreach ($faltantes as $codpes => $usuario) {
+
             $response = Http::asJson()->post($url, [
                 'object' => 'users',
                 'values' => [[
@@ -46,17 +48,8 @@ class ApiControlIdService
             ]);
 
             if($response->successful()){
-
-                $fotoPath = $usuario['is_external'] ? $usuario['usuario_externo']->foto : null;
-                // Para usuários USP, usa foto do WSfoto
-                /* if (!isset($usuario['is_external'])) { */
+                $fotoPath = Arr::exists($usuario, 'is_external') ? $usuario['usuario_externo']->foto : null;
                 FotoUpdateService::updateFoto($this->fechadura, $codpes, $fotoPath);
-                /* }  */
-                // Para usuários externos, usa foto salva localmente
-                /* else if (isset($usuario['usuario_externo']) && $usuario['usuario_externo']->foto) { */
-                /*     FotoUpdateService::updateFotoExterna($this->fechadura, $codpes, $usuario['usuario_externo']->foto); */
-                /* } */
-
                 $this->createUserGroups($codpes);
             }
         }
