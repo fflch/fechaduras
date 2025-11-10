@@ -18,10 +18,9 @@ class FotoUpdateService {
 
         $url = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/user_set_image.fcgi?user_id='. $codpes .'&timestamp='.time().'&match=0&session=' . $sessao;
 
-        $foto = $fotoPath ?
+        $img = $fotoPath ?
             file_get_contents(storage_path('app/public/' . $fotoPath)) :
-            Wsfoto::obter($codpes);
-        $img = $fotoPath ? $foto : base64_decode($foto);
+            base64_decode(Wsfoto::obter($codpes));
 
         $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])
             ->withBody($img, 'application/octet-stream')
