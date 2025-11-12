@@ -21,6 +21,15 @@ class AdminController extends Controller
            return back()->with('alert-danger', 'Número USP não encontrado!');
         }
 
+        // Verifica se já é admin da fechadura
+        $jaEAdmin = Admin::where('codpes', $request->codpes)
+                        ->where('fechadura_id', $fechadura->id)
+                        ->exists();
+
+        if ($jaEAdmin) {
+            return back()->with('alert-warning', 'Esta pessoa já é administradora da fechadura!');
+        }
+
         $admin = new Admin();
         $admin->codpes = $request->codpes;
         $admin->fechadura_id = $fechadura->id;

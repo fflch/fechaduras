@@ -61,17 +61,13 @@ class ReplicadoService{
     }
 
     public static function retornaCodpes($codpes){
-        $codundclg = getenv('REPLICADO_CODUNDCLG');
 
         $query = "SELECT DISTINCT (l.codpes) 
-        FROM LOCALIZAPESSOA l 
-        WHERE l.codpes = convert(int,:codpes) 
-        AND l.codundclg = convert(int,:codundclg) 
-        AND l.sitatl = 'A'";
+        FROM PESSOA l 
+        WHERE l.codpes = convert(int,:codpes)"; 
         
         $param = [
             'codpes' => $codpes,
-            'codundclg' => $codundclg
         ];
 
         return DB::fetch($query, $param);
