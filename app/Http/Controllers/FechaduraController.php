@@ -18,7 +18,6 @@ use App\Http\Requests\CadastrarSenhaRequest;
 use App\Services\ReplicadoService;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Admin;
-use App\Models\UsuarioExterno;
 
 class FechaduraController extends Controller
 {
@@ -241,39 +240,20 @@ class FechaduraController extends Controller
     }
 
     // No FechaduraController
-public function excluirUsuarioFechadura(Fechadura $fechadura, $userId)
-{
-    Gate::authorize('adminFechadura', $fechadura);
+    public function excluirUsuarioFechadura(Fechadura $fechadura, $userId)
+    {
+        Gate::authorize('adminFechadura', $fechadura);
 
-    // Verificar se o usuário é administrador da fechadura
-    $isAdmin = $fechadura->admins()->where('codpes', $userId)->exists();
-    if ($isAdmin) {
-        return back()->with('alert-danger', 'Não é possível excluir um administrador de fechadura!');
-    }
+        $apiService = new ApiControlIdService($fechadura);
+        $resultado = $apiService->deleteUser($userId);
 
-    $apiService = new ApiControlIdService($fechadura);
-    $resultado = $apiService->deleteUser($userId);
+        if ($resultado['success']) {
 
-    if ($resultado['success']) {
-        
-        // Verificar se é usuário USP
-        $userUSP = User::where('codpes', $userId)->first();
-        if ($userUSP) {
-            $fechadura->usuarios()->detach($userUSP->id);
-        }
-        
-        // Verificar se é usuário externo (IDs acima de 10000)
-        if ($userId > 10000) {
-            $usuarioExternoId = $userId - 10000;
-            $usuarioExterno = UsuarioExterno::find($usuarioExternoId);
-            if ($usuarioExterno) {
-                $usuarioExterno->delete();
-            }
+            UsuarioService::delete($fechadura, $userId);
+
+            return back()->with('alert-success', 'Usuário excluído da fechadura!');
         }
 
-        return back()->with('alert-success', 'Usuário excluído da fechadura!');
+        return back()->with('alert-danger', 'Erro ao excluir usuário: ' . ($resultado['error'] ?? 'Erro desconhecido'));
     }
-
-    return back()->with('alert-danger', 'Erro ao excluir usuário: ' . ($resultado['error'] ?? 'Erro desconhecido'));
-}
 }
