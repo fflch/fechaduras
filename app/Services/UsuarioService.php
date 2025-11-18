@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\User;
 use Uspdev\Replicado\Pessoa;
+use App\Models\Fechadura;
+use App\Models\UsuarioExterno;
 
 class UsuarioService
 {
@@ -11,7 +13,8 @@ class UsuarioService
      * Create a new class instance.
      */
 
-    public static function verifyAndCreateUsers($codpes, $fechadura) :array {
+    public static function verifyAndCreateUsers($codpes, $fechadura) :array
+    {
         $numerosUsp = explode(',', $codpes);
         $numerosUsp = array_filter($numerosUsp, 'is_numeric');
 
@@ -37,5 +40,20 @@ class UsuarioService
         }
 
         return $naoEncontrado;
+    }
+
+    public static function delete(Fechadura $fechadura, $userId) :void
+    {
+        // Verificar se é usuário USP
+        $userUSP = User::where('codpes', $userId)->first();
+        if ($userUSP) {
+            $fechadura->usuarios()->detach($userUSP->id);
+        }
+
+        // Verificar se é usuário externo (IDs acima de 10000)
+        if ($userId > 10000) {
+            $usuarioExternoId = $userId - 10000;
+            UsuarioExterno::destroy($usuarioExternoId);
+        }
     }
 }

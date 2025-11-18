@@ -53,6 +53,7 @@
                         <th>Nome</th>
                         <th>Foto</th>
                         <th>Senha</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -98,6 +99,18 @@
                                     @endcan
                                 @endif
                             </td>
+                            <td>
+                            @can('adminFechadura', $fechadura)
+                            <form method="POST" action="/fechaduras/{{ $fechadura->id }}/excluir-usuario/{{ $usuario['id'] }}" 
+                                  class="d-inline" 
+                                  onsubmit="return confirm('Tem certeza que deseja excluir este usuário da fechadura?')">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-danger" title="Excluir da fechadura">
+                                    <i class="fas fa-trash"></i> Excluir
+                                </button>
+                            </form>
+                            @endcan
+                        </td>
                         </tr>
                     @empty
                         <tr>

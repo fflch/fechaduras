@@ -6,6 +6,8 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UsuarioExternoController;
+use App\Models\Fechadura;
+use App\Services\ApiControlIdService;
 
 Route::get('/',[IndexController::class, 'index']);
 
@@ -30,6 +32,9 @@ Route::post('/fechaduras/{fechadura}/cadastrar-foto/{userId}', [FechaduraControl
 // Rotas para cadastrar senha nas fechaduras
 Route::get('/fechaduras/{fechadura}/cadastrar-senha/{userId}', [FechaduraController::class, 'showCadastrarSenha']);
 Route::post('/fechaduras/{fechadura}/cadastrar-senha/{userId}', [FechaduraController::class, 'cadastrarSenha']);
+
+// Rota para excluir usuário da fechadura
+Route::post('/fechaduras/{fechadura}/excluir-usuario/{userId}', [FechaduraController::class, 'excluirUsuarioFechadura']);
 
 // Sincronização de usuários à fechadura
 Route::post('/fechaduras/{fechadura}/sincronizar',[FechaduraController::class, 'sincronizar']);

@@ -240,4 +240,34 @@ class ApiControlIdService
         return $errorMessages[$error['code']] ?? 'Erro ao cadastrar a foto, erro não definido.';
     }
 
+    //Exclui usuários da fechadura 
+    public function deleteUser($userId)
+    {
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/destroy_objects.fcgi?session=' . $this->sessao;
+
+        $data = [
+            'object' => 'users',
+            'where' => [
+                'users' => [
+                    'id' => (int)$userId
+                ]
+            ]
+        ];
+        
+        $response = Http::asJson()->post($url, $data);
+
+        if ($response->successful()) {
+            $result = $response->json();
+            return [
+                'success' => true,
+                'deleted' => $result['changes'] ?? 0
+            ];
+        }
+
+        return [
+            'success' => false,
+            'error' => 'Falha ao excluir usuário',
+            'status' => $response->status()
+        ];
+    }
 }

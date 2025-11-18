@@ -239,5 +239,21 @@ class FechaduraController extends Controller
         return redirect("/fechaduras/{$fechadura->id}");
     }
 
+    // No FechaduraController
+    public function excluirUsuarioFechadura(Fechadura $fechadura, $userId)
+    {
+        Gate::authorize('adminFechadura', $fechadura);
 
+        $apiService = new ApiControlIdService($fechadura);
+        $resultado = $apiService->deleteUser($userId);
+
+        if ($resultado['success']) {
+
+            UsuarioService::delete($fechadura, $userId);
+
+            return back()->with('alert-success', 'Usuário excluído da fechadura!');
+        }
+
+        return back()->with('alert-danger', 'Erro ao excluir usuário: ' . ($resultado['error'] ?? 'Erro desconhecido'));
+    }
 }
