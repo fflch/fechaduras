@@ -270,4 +270,42 @@ class ApiControlIdService
             'status' => $response->status()
         ];
     }
+
+    // Excluir usuários em lote (ao sincronizar)
+    public function deleteUsersBatch(array $userIds)
+    {
+        if (empty($userIds)) {
+            return ['success' => true, 'deleted' => 0];
+        }
+
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/destroy_objects.fcgi?session=' . $this->sessao;
+
+        $userIds = array_map('intval', $userIds);
+        
+        $data = [
+            'object' => 'users',
+            'where' => [
+                'users' => [
+                    'id' => $userIds
+                ]
+            ]
+        ];
+        
+        $response = Http::asJson()->post($url, $data);
+
+        if ($response->successful()) {
+            $result = $response->json();
+            return [
+                'success' => true,
+                'deleted' => $result['changes'] ?? 0
+            ];
+        }
+
+        return [
+            'success' => false,
+            'error' => 'Falha ao excluir usuários da fechadura',
+            'status' => $response->status()
+        ];
+        
+    }
 }
