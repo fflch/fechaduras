@@ -63,6 +63,34 @@ class SyncUsersAction
             ->merge($usuariosExternos)
             ->keyBy('codpes');
 
+        // Usuários sem registration (serão excluídos)
+        $usuariosSemRegistration = $loadUsers->filter(function ($user) {
+            return empty($user['registration']) || $user['registration'] === '';
+        });
+
+        // IDs dos usuários do sistema
+        $idsUsuariosSistema = $usuarios->keys()->map(function ($codpes) {
+            return (int)$codpes;
+        });
+
+        // Usuários que estão na fechadura mas não estão no sistema
+        $usuariosForaSistema = $loadUsers->filter(function ($user) use ($idsUsuariosSistema) {
+            $userId = (int)$user['id'];
+            return !$idsUsuariosSistema->contains($userId);
+        });
+
+        // Combinar ambas as listas (sem registration + fora do sistema)
+        $todosParaExcluir = $usuariosSemRegistration->merge($usuariosForaSistema)->unique('id');
+
+        // Exclui usuários da fechadura
+        if ($todosParaExcluir->isNotEmpty()) {
+            $idsParaExcluir = $todosParaExcluir->pluck('id');
+
+            foreach ($idsParaExcluir->chunk(50) as $lote) {
+                $api->deleteUsersBatch($lote->toArray());
+            }
+        }
+
         // Verificar usuários faltantes na fechadura
         $faltantes = $usuarios->diffKeys($loadUsers->keyBy('id'))
             ->merge($usuarios->diffKeys($loadUsers->keyBy('registration')))

@@ -137,6 +137,7 @@ class FechaduraController extends Controller
         return redirect('/fechaduras');
     }
 
+    // Cadastra usuário no sistema
     public function createFechaduraUser(Fechadura $fechadura, Request $request){
         Gate::authorize('adminFechadura', $fechadura);
 
@@ -155,6 +156,7 @@ class FechaduraController extends Controller
         return back()->withInput();
     }
 
+    // Cadastra setor no sistema
     public function createFechaduraSetor(Fechadura $fechadura, Request $request){
         Gate::authorize('adminFechadura', $fechadura);
 
@@ -163,6 +165,7 @@ class FechaduraController extends Controller
         return back();
     }
 
+    // Cadastrar area da pós ao sistema
     public function createFechaduraPos(Request $request, Fechadura $fechadura){
         Gate::authorize('adminFechadura', $fechadura);
 
@@ -171,6 +174,7 @@ class FechaduraController extends Controller
         return back();
     }
 
+    // Deleta usuário do sistema (não da fechadura)
     public function deleteUser(Fechadura $fechadura, User $user){
         Gate::authorize('adminFechadura', $fechadura);
 
@@ -212,6 +216,7 @@ class FechaduraController extends Controller
         ]);
     }
 
+    // Cadastra foto do usuário na fechadura
     public function cadastrarFoto(CadastrarFotoRequest $request, Fechadura $fechadura, $userId)
     {
         Gate::authorize('adminFechadura', $fechadura);
@@ -229,6 +234,7 @@ class FechaduraController extends Controller
             ->withInput();
     }
 
+    // Cadastra senha de usuário na fechadura
     public function cadastrarSenha(CadastrarSenhaRequest $request, Fechadura $fechadura, $userId)
     {
         Gate::authorize('adminFechadura', $fechadura);
@@ -239,7 +245,7 @@ class FechaduraController extends Controller
         return redirect("/fechaduras/{$fechadura->id}");
     }
 
-    // No FechaduraController
+    // Exclui usuario da fechadura
     public function excluirUsuarioFechadura(Fechadura $fechadura, $userId)
     {
         Gate::authorize('adminFechadura', $fechadura);
