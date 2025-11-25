@@ -82,13 +82,11 @@ class SyncUsersAction
         // Combinar ambas as listas (sem registration + fora do sistema)
         $todosParaExcluir = $usuariosSemRegistration->merge($usuariosForaSistema)->unique('id');
 
-        // Exclui usuários da fechadura 
+        // Exclui usuários da fechadura
         if ($todosParaExcluir->isNotEmpty()) {
             $idsParaExcluir = $todosParaExcluir->pluck('id');
-            
-            $lotes = $idsParaExcluir->chunk(50);
-            
-            foreach ($lotes as $lote) {
+
+            foreach ($idsParaExcluir->chunk(50) as $lote) {
                 $api->deleteUsersBatch($lote->toArray());
             }
         }
