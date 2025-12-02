@@ -35,7 +35,7 @@ class AuthServiceProvider extends ServiceProvider
         // Admin da fechadura especifica 
         Gate::define('adminFechadura', function ($user, $fechadura) {
 
-            if (in_array($user->codpes, config('senhaunica.admins'))) return true;
+            if(Gate::allows('admin')) return true;
 
             $admin = Admin::where('codpes', $user->codpes)->where('fechadura_id', $fechadura->id)->get();
             if($admin->isNotEmpty()) return True;
