@@ -85,6 +85,11 @@ class FechaduraController extends Controller
 
         $usuarios = $response->json()['users'] ?? [];
 
+        // lista usuários em ordem alfabetica 
+        usort($usuarios, function($a, $b) {
+            return strcmp($a['name'] ?? '', $b['name'] ?? '');
+        });
+
         // Carrega usuários externos
         $usuariosExternos = $fechadura->usuariosExternos()->with('cadastradoPor')->get();
 
