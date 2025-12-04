@@ -11,7 +11,7 @@
                     </a>
                 </div>
                 <div class="card-header">
-                    <h4>Foto Atual</h4>
+                    <h3>{{ $userId }} - {{ $usuario['name'] }}</h3>
                 </div>
                 <div class="card-body text-center">
                     <img src="/fechaduras/{{ $fechadura->id }}/get-foto/{{ $userId }}" 
@@ -22,9 +22,16 @@
                     <div id="sem-foto" class="alert alert-warning" style="display: none;">
                         <i class="fas fa-user-slash"></i> Sem foto cadastrada
                     </div>
-                    
-                </div>
-            </div>
+
+                    @if(isset($usuario['image_timestamp']) && $usuario['image_timestamp'] > 0)
+                        <div class="mt-2 small text-muted">
+                            <i class="fas fa-clock"></i> 
+                            Foto cadastrada em: 
+                            {{ date('d/m/Y H:i:s', $usuario['image_timestamp']) }}
+                        </div>
+                    @endif                    
+                </div>               
+             </div>
         </div>
         
         <div class="col-md-6">
