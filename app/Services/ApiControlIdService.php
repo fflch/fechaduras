@@ -308,4 +308,26 @@ class ApiControlIdService
         ];
         
     }
+
+    // Busca foto do usuário na fechadura
+    public function getFoto($userId)
+    {
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . 
+            '/user_get_image.fcgi?user_id=' . $userId . '&session=' . $this->sessao;
+        
+        $response = Http::timeout(10)->get($url);
+        
+        if ($response->successful()) {
+            return [
+                'success' => true,
+                'content' => $response->body(),
+                'content_type' => $response->header('Content-Type', 'image/jpeg')
+            ];
+        }
+        
+        return [
+            'success' => false,
+            'content' => null
+        ];
+    }
 }
