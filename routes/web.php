@@ -28,6 +28,7 @@ Route::post('/fechaduras/{fechadura}/logs', [LogController::class, 'updateLogs']
 Route::post('/fotos', [FechaduraController::class, 'fotos']);
 Route::get('/fechaduras/{fechadura}/cadastrar-foto/{userId}', [FechaduraController::class, 'showCadastrarFoto']);
 Route::post('/fechaduras/{fechadura}/cadastrar-foto/{userId}', [FechaduraController::class, 'cadastrarFoto']);
+Route::get('/fechaduras/{fechadura}/get-foto/{userId}', [FechaduraController::class, 'getFoto']);
 
 // Rotas para cadastrar senha nas fechaduras
 Route::get('/fechaduras/{fechadura}/cadastrar-senha/{userId}', [FechaduraController::class, 'showCadastrarSenha']);
