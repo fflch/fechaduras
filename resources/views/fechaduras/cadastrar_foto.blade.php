@@ -1,57 +1,165 @@
 @extends('main')
 
 @section('content')
-<div class="card">
-    <div class="card-header">
-        <h3>Cadastrar Foto para Usuário {{ $userId }}</h3>
-    </div>
-    <div class="card-body">
-        <form method="POST" action="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $userId }}" enctype="multipart/form-data" id="fotoForm">
-            @csrf
-            
-            <div class="mb-3">
-                <label for="foto" class="form-label">Selecione a imagem</label>
-                <input type="file" class="form-control" id="foto" name="foto" accept="image/*" onchange="previewImage(this)">
-                <div class="form-text">Tamanho máximo: 2MB • Formatos: JPG, PNG</div>
-            </div>
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <a href="/fechaduras/{{ $fechadura->id }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </a>
+                </div>
+                <div class="card-header">
+                    <h3>{{ $userId }} - {{ $usuario['name'] }}</h3>
+                </div>
+                <div class="card-body text-center">
+                    <img src="/fechaduras/{{ $fechadura->id }}/get-foto/{{ $userId }}"
+                         class="img-fluid img-thumbnail mb-3"
+                         style="max-height: 300px;"
+                         onerror="this.style.display='none'; document.getElementById('sem-foto').style.display='block';">
 
-            {{-- Preview da imagem --}}
-            <div class="mb-3" id="imagePreview" style="display: none;">
-                <label class="form-label">Preview:</label>
-                <div>
-                    <img id="preview" src="#" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
+                    <div id="sem-foto" class="alert alert-warning" style="display: none;">
+                        <i class="fas fa-user-slash"></i> Sem foto cadastrada
+                    </div>
+
+                    @if(isset($usuario['image_timestamp']) && $usuario['image_timestamp'] > 0)
+                        <div class="mt-2 small text-muted">
+                            <i class="fas fa-clock"></i>
+                            Foto cadastrada em:
+                            {{ date('d/m/Y H:i:s', $usuario['image_timestamp']) }}
+                        </div>
+                    @endif
+                </div>
+             </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Nova Foto</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Webcam -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-camera"></i> Webcam</h5>
+                        <div class="text-center">
+                            <video id="video" autoplay class="img-thumbnail w-100 mb-2" style="max-height: 200px;"></video>
+
+                            <div class="mb-2">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="ligarWebcam()">
+                                    Ligar Câmera
+                                </button>
+                                <button type="button" class="btn btn-warning btn-sm" onclick="pararWebcam()">
+                                    Desligar
+                                </button>
+                                <button type="button" class="btn btn-success btn-sm" onclick="tirarFoto()" id="btnTirar" disabled>
+                                    Tirar Foto
+                                </button>
+                            </div>
+
+                            <div id="previewFoto" style="display: none;">
+                                <p><strong>Preview:</strong></p>
+                                <canvas id="canvas" class="img-thumbnail mb-2" style="max-width: 200px;"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload da foto -->
+                    <div class="mb-4">
+                        <h5><i class="fas fa-upload"></i> Upload de arquivo</h5>
+                        <input type="file" class="form-control" id="arquivo" accept="image/*" onchange="previewArquivo()">
+
+                        <div id="previewArquivo" class="mt-2" style="display: none;">
+                            <img id="imgArquivo" class="img-thumbnail" style="max-width: 200px;">
+                        </div>
+                    </div>
+
+                    <!-- Formulário -->
+                    <form method="POST" action="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $userId }}" id="formFoto">
+                        @csrf
+                        <input type="hidden" id="foto" name="foto">
+
+                        <button type="submit" class="btn btn-primary w-100" id="btnEnviar" disabled>
+                            <i class="fas fa-upload"></i> Enviar Foto
+                        </button>
+                    </form>
                 </div>
             </div>
-
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-upload"></i> Enviar Foto
-                </button>
-                <a href="/fechaduras/{{ $fechadura->id }}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> Cancelar
-                </a>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
+@endsection
 
+@section('javascripts_bottom')
 <script>
-function previewImage(input) {
-    const preview = document.getElementById('preview');
-    const previewContainer = document.getElementById('imagePreview');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            previewContainer.style.display = 'block';
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-    } else {
-        previewContainer.style.display = 'none';
+let stream = null;
+let fotoAtual = null;
+
+// Webcam
+function ligarWebcam() {
+    navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(function(s) {
+            stream = s;
+            document.getElementById('video').srcObject = s;
+            document.getElementById('btnTirar').disabled = false;
+            document.getElementById('previewFoto').style.display = 'none';
+        })
+        .catch(function() {
+            alert('Não foi possível acessar a webcam');
+        });
+}
+
+function pararWebcam() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        document.getElementById('video').srcObject = null;
+        document.getElementById('btnTirar').disabled = true;
     }
 }
+
+function tirarFoto() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+
+    fotoAtual = canvas.toDataURL('image/jpeg');
+    document.getElementById('previewFoto').style.display = 'block';
+    document.getElementById('foto').value = fotoAtual;
+    document.getElementById('btnEnviar').disabled = false;
+
+    pararWebcam();
+}
+
+// Upload de arquivo
+function previewArquivo() {
+    const input = document.getElementById('arquivo');
+    const preview = document.getElementById('previewArquivo');
+    const img = document.getElementById('imgArquivo');
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            preview.style.display = 'block';
+
+            fotoAtual = e.target.result;
+            document.getElementById('foto').value = fotoAtual;
+            document.getElementById('btnEnviar').disabled = false;
+
+            pararWebcam();
+        }
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Para webcam ao sair
+window.addEventListener('beforeunload', pararWebcam);
 </script>
 @endsection

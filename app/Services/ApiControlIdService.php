@@ -158,11 +158,18 @@ class ApiControlIdService
             'application/octet-stream'
         )->post($url);
 
+        if ( $response->successful() ) {
+            return [
+                'success' => $response->json('success'),
+                'message' => $response->json('success') ?
+                    'Foto cadastrada com sucesso.' :
+                    $this->getErrorMessage($response->json('errors'))
+            ];
+        }
+
         return [
-            'success' => $response->json('success'),
-            'message' => $response->json('success') ?
-                'Foto cadastrada com sucesso.' :
-                $this->getErrorMessage($response->json('errors'))
+            'success' => false,
+            'message' => $this->getErrorMessage([['code' => 1]])
         ];
     }
 
@@ -240,7 +247,7 @@ class ApiControlIdService
         return $errorMessages[$error['code']] ?? 'Erro ao cadastrar a foto, erro não definido.';
     }
 
-    //Exclui usuários da fechadura 
+    //Exclui usuários da fechadura
     public function deleteUser($userId)
     {
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/destroy_objects.fcgi?session=' . $this->sessao;
@@ -253,7 +260,7 @@ class ApiControlIdService
                 ]
             ]
         ];
-        
+
         $response = Http::asJson()->post($url, $data);
 
         if ($response->successful()) {
@@ -281,7 +288,7 @@ class ApiControlIdService
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/destroy_objects.fcgi?session=' . $this->sessao;
 
         $userIds = array_map('intval', $userIds);
-        
+
         $data = [
             'object' => 'users',
             'where' => [
@@ -290,7 +297,7 @@ class ApiControlIdService
                 ]
             ]
         ];
-        
+
         $response = Http::asJson()->post($url, $data);
 
         if ($response->successful()) {
@@ -306,6 +313,28 @@ class ApiControlIdService
             'error' => 'Falha ao excluir usuários da fechadura',
             'status' => $response->status()
         ];
-        
+
+    }
+
+    // Busca foto do usuário na fechadura
+    public function getFoto($userId)
+    {
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta .
+            '/user_get_image.fcgi?user_id=' . $userId . '&session=' . $this->sessao;
+
+        $response = Http::timeout(10)->get($url);
+
+        if ($response->successful()) {
+            return [
+                'success' => true,
+                'content' => $response->body(),
+                'content_type' => $response->header('Content-Type', 'image/jpeg')
+            ];
+        }
+
+        return [
+            'success' => false,
+            'content' => null
+        ];
     }
 }
