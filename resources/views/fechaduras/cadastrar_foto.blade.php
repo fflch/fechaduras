@@ -14,26 +14,26 @@
                     <h3>{{ $userId }} - {{ $usuario['name'] }}</h3>
                 </div>
                 <div class="card-body text-center">
-                    <img src="/fechaduras/{{ $fechadura->id }}/get-foto/{{ $userId }}" 
-                         class="img-fluid img-thumbnail mb-3" 
+                    <img src="/fechaduras/{{ $fechadura->id }}/get-foto/{{ $userId }}"
+                         class="img-fluid img-thumbnail mb-3"
                          style="max-height: 300px;"
                          onerror="this.style.display='none'; document.getElementById('sem-foto').style.display='block';">
-                    
+
                     <div id="sem-foto" class="alert alert-warning" style="display: none;">
                         <i class="fas fa-user-slash"></i> Sem foto cadastrada
                     </div>
 
                     @if(isset($usuario['image_timestamp']) && $usuario['image_timestamp'] > 0)
                         <div class="mt-2 small text-muted">
-                            <i class="fas fa-clock"></i> 
-                            Foto cadastrada em: 
+                            <i class="fas fa-clock"></i>
+                            Foto cadastrada em:
                             {{ date('d/m/Y H:i:s', $usuario['image_timestamp']) }}
                         </div>
-                    @endif                    
-                </div>               
+                    @endif
+                </div>
              </div>
         </div>
-        
+
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -45,7 +45,7 @@
                         <h5><i class="fas fa-camera"></i> Webcam</h5>
                         <div class="text-center">
                             <video id="video" autoplay class="img-thumbnail w-100 mb-2" style="max-height: 200px;"></video>
-                            
+
                             <div class="mb-2">
                                 <button type="button" class="btn btn-primary btn-sm" onclick="ligarWebcam()">
                                     Ligar Câmera
@@ -57,29 +57,29 @@
                                     Tirar Foto
                                 </button>
                             </div>
-                            
+
                             <div id="previewFoto" style="display: none;">
                                 <p><strong>Preview:</strong></p>
                                 <canvas id="canvas" class="img-thumbnail mb-2" style="max-width: 200px;"></canvas>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Upload da foto -->
                     <div class="mb-4">
                         <h5><i class="fas fa-upload"></i> Upload de arquivo</h5>
                         <input type="file" class="form-control" id="arquivo" accept="image/*" onchange="previewArquivo()">
-                        
+
                         <div id="previewArquivo" class="mt-2" style="display: none;">
                             <img id="imgArquivo" class="img-thumbnail" style="max-width: 200px;">
                         </div>
                     </div>
-                    
+
                     <!-- Formulário -->
                     <form method="POST" action="/fechaduras/{{ $fechadura->id }}/cadastrar-foto/{{ $userId }}" id="formFoto">
                         @csrf
-                        <input type="hidden" id="fotoBase64" name="foto_base64">
-                        
+                        <input type="hidden" id="foto" name="foto">
+
                         <button type="submit" class="btn btn-primary w-100" id="btnEnviar" disabled>
                             <i class="fas fa-upload"></i> Enviar Foto
                         </button>
@@ -89,7 +89,9 @@
         </div>
     </div>
 </div>
+@endsection
 
+@section('javascripts_bottom')
 <script>
 let stream = null;
 let fotoAtual = null;
@@ -120,16 +122,16 @@ function tirarFoto() {
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
-    
+
     fotoAtual = canvas.toDataURL('image/jpeg');
     document.getElementById('previewFoto').style.display = 'block';
-    document.getElementById('fotoBase64').value = fotoAtual;
+    document.getElementById('foto').value = fotoAtual;
     document.getElementById('btnEnviar').disabled = false;
-    
+
     pararWebcam();
 }
 
@@ -138,21 +140,21 @@ function previewArquivo() {
     const input = document.getElementById('arquivo');
     const preview = document.getElementById('previewArquivo');
     const img = document.getElementById('imgArquivo');
-    
+
     if (input.files && input.files[0]) {
         const reader = new FileReader();
-        
+
         reader.onload = function(e) {
             img.src = e.target.result;
             preview.style.display = 'block';
-            
+
             fotoAtual = e.target.result;
-            document.getElementById('fotoBase64').value = fotoAtual;
+            document.getElementById('foto').value = fotoAtual;
             document.getElementById('btnEnviar').disabled = false;
-            
+
             pararWebcam();
         }
-        
+
         reader.readAsDataURL(input.files[0]);
     }
 }
