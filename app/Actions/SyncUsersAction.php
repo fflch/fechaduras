@@ -13,7 +13,10 @@ class SyncUsersAction
         $loadUsers = collect($api->loadUsers());
         $setores = $fechadura->setores->pluck('codset');
         $areas = $fechadura->areas->pluck('codare');
-
+        
+        // Busca usuários bloqueados
+        $usuariosBloqueados = $fechadura->usuariosBloqueados->pluck('codpes');
+        
         // Busca usuários de setores e áreas
         $usuariosSetor = collect();
         $alunosPos = collect();
@@ -56,11 +59,16 @@ class SyncUsersAction
             ];
         }
 
-        // Combina todos os usuários
+        // Combina todos os usuários (menos bloqueados)
         $usuarios = $usuariosSetor
             ->merge($alunosPos)
             ->merge($usuariosManuais)
             ->merge($usuariosExternos)
+            ->filter(function ($usuario) use ($usuariosBloqueados) {
+                // Filtra usuários bloqueados
+                $codpes = $usuario['codpes'];
+                return !$usuariosBloqueados->contains($codpes);
+            })
             ->keyBy('codpes');
 
         // Usuários sem registration (serão excluídos)
@@ -69,18 +77,31 @@ class SyncUsersAction
         });
 
         // IDs dos usuários do sistema
-        $idsUsuariosSistema = $usuarios->keys()->map(function ($codpes) {
-            return (int)$codpes;
-        });
+        $idsUsuariosSistema = $usuarios->keys()
+            ->merge($usuariosBloqueados)
+            ->map(function ($codpes) {
+                return (int)$codpes;
+            });
 
-        // Usuários que estão na fechadura mas não estão no sistema
-        $usuariosForaSistema = $loadUsers->filter(function ($user) use ($idsUsuariosSistema) {
+        // Usuários que estão na fechadura mas não estão no sistema OU bloqueados
+        $usuariosForaSistema = $loadUsers->filter(function ($user) use ($idsUsuariosSistema, $usuariosBloqueados) {
             $userId = (int)$user['id'];
-            return !$idsUsuariosSistema->contains($userId);
+            return !$idsUsuariosSistema->contains($userId) && 
+                   !$usuariosBloqueados->contains($userId);
         });
 
-        // Combinar ambas as listas (sem registration + fora do sistema)
-        $todosParaExcluir = $usuariosSemRegistration->merge($usuariosForaSistema)->unique('id');
+        // Adiciona usuários bloqueados que estão na fechadura para exclusão
+        $usuariosBloqueadosNaFechadura = $loadUsers->filter(function ($user) use ($usuariosBloqueados) {
+            $userId = (int)$user['id'];
+            
+            return $usuariosBloqueados->contains($userId);
+        });
+
+        // Combinar todas as listas para exclusão
+        $todosParaExcluir = $usuariosSemRegistration
+            ->merge($usuariosForaSistema)
+            ->merge($usuariosBloqueadosNaFechadura)
+            ->unique('id');
 
         // Exclui usuários da fechadura
         if ($todosParaExcluir->isNotEmpty()) {

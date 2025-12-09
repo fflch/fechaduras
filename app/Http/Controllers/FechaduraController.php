@@ -102,12 +102,16 @@ class FechaduraController extends Controller
         // Carrega administradores
         $admins = $fechadura->admins()->with('user')->get();
 
+        // Carrega usuarios bloqueados
+        $usuariosBloqueados = $fechadura->usuariosBloqueados()->with('bloqueadoPor')->get();
+
         // 3 - passa os dados para a view
         return view('fechaduras.show', [
             'fechadura' => $fechadura,
             'usuarios' => $usuarios,
             'usuariosExternos' => $usuariosExternos,
             'admins' => $admins,
+            'usuariosBloqueados' => $usuariosBloqueados,
             'programas' => ReplicadoService::programasPosUnidade()
         ]);
     }

@@ -30,16 +30,20 @@
         </div>
     </div>
 
+    <!-- setor, area usuario -->
     @include('partials.form_setor')
     @include('partials.form_posgrad')
     @include('partials.form_user')
-
     @include('partials.usuarios')
-
+    <!-- usuarios externos -->
     @include('partials.form_usuario_externo')
     @include('partials.usuarios_externos')
+    <!-- admininstradores -->
     @include('partials.form_admins')
     @include('partials.admins')
+    <!-- usuariosbloqueados -->
+    @include('partials.form_usuario_bloqueado')
+    @include('partials.usuarios_bloqueados')
 
     <div class="card mt-4">
         <div class="card-header">
