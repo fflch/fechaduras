@@ -91,7 +91,7 @@ class FechaduraController extends Controller
 
         $usuarios = $response->json()['users'] ?? [];
 
-        // lista usuários em ordem alfabetica 
+        // lista usuários em ordem alfabetica
         usort($usuarios, function($a, $b) {
             return strcmp($a['name'] ?? '', $b['name'] ?? '');
         });
@@ -213,14 +213,14 @@ class FechaduraController extends Controller
     public function showCadastrarFoto(Fechadura $fechadura, $userId)
     {
         Gate::authorize('adminFechadura', $fechadura);
-        
+
         // Busca informações do usuário na fechadura
         $apiService = new ApiControlIdService($fechadura);
         $usuarios = $apiService->loadUsers();
-        
+
         // Encontra o usuário específico
         $usuarioFechadura = collect($usuarios)->firstWhere('id', (int)$userId);
-        
+
         return view('fechaduras.cadastrar_foto', [
             'fechadura' => $fechadura,
             'usuario' => $usuarioFechadura,
@@ -244,31 +244,22 @@ class FechaduraController extends Controller
     {
         Gate::authorize('adminFechadura', $fechadura);
 
-        $apiService = new ApiControlIdService($fechadura);
-        
         // Se for foto da webcam (base64)
-        if ($request->has('foto_base64')) {
-            $base64 = $request->foto_base64;
-            
-            // Remove data:image/jpeg;base64, se existir
-            if (strpos($base64, 'base64,') !== false) {
-                $base64 = explode('base64,', $base64)[1];
-            }
-            
-            $imageData = base64_decode($base64);
-            
-            // Cria arquivo temporário
-            $tempFile = tempnam(sys_get_temp_dir(), 'webcam_') . '.jpg';
-            file_put_contents($tempFile, $imageData);
-            
-            $file = new UploadedFile($tempFile, 'webcam.jpg', 'image/jpeg', null, true);
-            $result = $apiService->uploadFoto($userId, $file);
-            unlink($tempFile);
-        } 
-        // Upload da foto sem webcam
-        else {
-            $result = $apiService->uploadFoto($userId, $request->file('foto'));
+        $foto = $request->safe()->foto;
+
+        // Remove data:image/jpeg;base64, se existir
+        if (strpos($foto, 'base64,') !== false) {
+            $foto = base64_decode(explode('base64,', $foto)[1]);
         }
+
+        // Cria arquivo temporário
+        $tempFile = tempnam(sys_get_temp_dir(), 'webcam_') . '.jpg';
+        file_put_contents($tempFile, $foto);
+
+        $file = new UploadedFile($tempFile, 'webcam.jpg', 'image/jpeg', null, true);
+        $apiService = new ApiControlIdService($fechadura);
+        $result = $apiService->uploadFoto($userId, $file);
+        unlink($tempFile);
 
         if ($result['success']) {
             return back()
@@ -284,27 +275,27 @@ class FechaduraController extends Controller
     public function getFoto(Fechadura $fechadura, $userId)
     {
         Gate::authorize('adminFechadura', $fechadura);
-        
+
         $apiService = new ApiControlIdService($fechadura);
         $result = $apiService->getFoto($userId);
-        
+
         if ($result['success']) {
             return response($result['content'])
                 ->header('Content-Type', $result['content_type'])
                 ->header('Cache-Control', 'no-cache');
         }
-        
+
         // Placeholder (biblioteca GD)
         $img = imagecreate(200, 200);
         $bg = imagecolorallocate($img, 240, 240, 240);
         $text = imagecolorallocate($img, 180, 180, 180);
         imagestring($img, 5, 60, 90, 'Sem Foto', $text);
-        
+
         ob_start();
         imagejpeg($img);
         $data = ob_get_clean();
         imagedestroy($img);
-        
+
         return response($data)->header('Content-Type', 'image/jpeg');
     }
 
