@@ -80,21 +80,8 @@ class FechaduraController extends Controller
     public function show(Fechadura $fechadura) {
         Gate::authorize('adminFechadura', $fechadura);
 
-        // 1 - Autenticação na API da fechadura
-        $session = LockSessionService::conexao($fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha);
+        $usuarios = (new ApiControlIdService($fechadura))->loadUsers();
 
-        // 2 - Carregamento dos usuários cadastrados na fechadura
-        $route = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/load_objects.fcgi?session=' . $session;
-        $response = Http::post($route, [
-            "object" => "users"
-        ]);
-
-        $usuarios = $response->json()['users'] ?? [];
-
-        // lista usuários em ordem alfabetica
-        usort($usuarios, function($a, $b) {
-            return strcmp($a['name'] ?? '', $b['name'] ?? '');
-        });
 
         // Carrega usuários externos
         $usuariosExternos = $fechadura->usuariosExternos()->with('cadastradoPor')->get();
@@ -103,7 +90,8 @@ class FechaduraController extends Controller
         $admins = $fechadura->admins()->with('user')->get();
 
         // Carrega usuarios bloqueados
-        $usuariosBloqueados = $fechadura->usuariosBloqueados()->with('bloqueadoPor')->get();
+        $usuariosBloqueados = $fechadura->usuariosBloqueados()->with(['bloqueadoPor','usuario'])->get();
+        //dd($usuariosBloqueados);
 
         // 3 - passa os dados para a view
         return view('fechaduras.show', [

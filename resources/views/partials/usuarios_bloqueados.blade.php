@@ -26,12 +26,10 @@
                     </thead>
                     <tbody>
                         @foreach ($fechadura->usuariosBloqueados as $bloqueado)
-                            @php
-                                $usuarioInfo = \App\Services\ReplicadoService::retornaCodpes($bloqueado->codpes);
-                            @endphp
+                            
                             <tr>
                                 <td>{{ $bloqueado->codpes }}</td>
-                                <td>{{ $usuarioInfo['nompes'] ?? 'Não encontrado' }}</td>
+                                <td>{{ $bloqueado->usuario->name }}</td>
                                 <td>{{ $bloqueado->motivo ?? 'Sem motivo' }}</td>
                                 <td>{{ $bloqueado->bloqueadoPor->name ?? 'Sistema' }}</td>
                                 <td>{{ $bloqueado->created_at->format('d/m/Y H:i') }}</td>

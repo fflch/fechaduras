@@ -30,7 +30,15 @@ class ApiControlIdService
         $response = Http::post($route, [
             "object" => "users"
         ]);
-        return $response->json()['users'] ?? [];
+
+        $usuarios = $response->json()['users'] ?? [];
+
+        // lista usuários em ordem alfabetica
+        usort($usuarios, function($a, $b) {
+            return strcmp($a['name'] ?? '', $b['name'] ?? '');
+        });
+
+        return $usuarios;
     }
 
     public function createUsers($faltantes){
