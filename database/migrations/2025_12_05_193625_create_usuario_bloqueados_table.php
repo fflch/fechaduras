@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('usuario_bloqueados');
+        Schema::dropIfExists('usuarios_bloqueados');
     }
 };

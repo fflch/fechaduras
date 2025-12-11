@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Http;
+/* use Illuminate\Support\Facades\Http; */
 
 // Classes do sistema
 use App\Http\Requests\FechaduraRequest;
@@ -16,7 +16,7 @@ use App\Models\Fechadura;
 use App\Models\User;
 use App\Models\Admin;
 use App\Services\ApiControlIdService;
-use App\Services\LockSessionService;
+/* use App\Services\LockSessionService; */
 use App\Services\UsuarioService;
 use App\Services\ReplicadoService;
 
@@ -91,7 +91,6 @@ class FechaduraController extends Controller
 
         // Carrega usuarios bloqueados
         $usuariosBloqueados = $fechadura->usuariosBloqueados()->with(['bloqueadoPor','usuario'])->get();
-        //dd($usuariosBloqueados);
 
         // 3 - passa os dados para a view
         return view('fechaduras.show', [

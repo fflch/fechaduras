@@ -53,6 +53,6 @@ Route::post('/fechaduras/{fechadura}/delete_usuario_externo/{usuarioExterno}', [
 Route::post('/fechaduras/{fechadura}/admin', [AdminController::class, 'store']);
 Route::delete('/fechaduras/{fechadura}/admin/{admin}', [AdminController::class, 'destroy']);
 
-// Rotas para gerenciar usuários bloqueados 
+// Rotas para gerenciar usuários bloqueados
 Route::post('/fechaduras/{fechadura}/bloquear-usuario', [UsuarioBloqueadoController::class, 'store']);
 Route::delete('/fechaduras/{fechadura}/bloquear-usuario/{usuarioBloqueado}', [UsuarioBloqueadoController::class, 'destroy']);
