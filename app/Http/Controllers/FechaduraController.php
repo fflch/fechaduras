@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Http;
+/* use Illuminate\Support\Facades\Http; */
 
 // Classes do sistema
 use App\Http\Requests\FechaduraRequest;
@@ -16,7 +16,7 @@ use App\Models\Fechadura;
 use App\Models\User;
 use App\Models\Admin;
 use App\Services\ApiControlIdService;
-use App\Services\LockSessionService;
+/* use App\Services\LockSessionService; */
 use App\Services\UsuarioService;
 use App\Services\ReplicadoService;
 
@@ -80,21 +80,8 @@ class FechaduraController extends Controller
     public function show(Fechadura $fechadura) {
         Gate::authorize('adminFechadura', $fechadura);
 
-        // 1 - Autenticação na API da fechadura
-        $session = LockSessionService::conexao($fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha);
+        $usuarios = (new ApiControlIdService($fechadura))->loadUsers();
 
-        // 2 - Carregamento dos usuários cadastrados na fechadura
-        $route = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/load_objects.fcgi?session=' . $session;
-        $response = Http::post($route, [
-            "object" => "users"
-        ]);
-
-        $usuarios = $response->json()['users'] ?? [];
-
-        // lista usuários em ordem alfabetica
-        usort($usuarios, function($a, $b) {
-            return strcmp($a['name'] ?? '', $b['name'] ?? '');
-        });
 
         // Carrega usuários externos
         $usuariosExternos = $fechadura->usuariosExternos()->with('cadastradoPor')->get();
@@ -102,12 +89,16 @@ class FechaduraController extends Controller
         // Carrega administradores
         $admins = $fechadura->admins()->with('user')->get();
 
+        // Carrega usuarios bloqueados
+        $usuariosBloqueados = $fechadura->usuariosBloqueados()->with(['bloqueadoPor','usuario'])->get();
+
         // 3 - passa os dados para a view
         return view('fechaduras.show', [
             'fechadura' => $fechadura,
             'usuarios' => $usuarios,
             'usuariosExternos' => $usuariosExternos,
             'admins' => $admins,
+            'usuariosBloqueados' => $usuariosBloqueados,
             'programas' => ReplicadoService::programasPosUnidade()
         ]);
     }

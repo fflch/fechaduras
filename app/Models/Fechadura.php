@@ -45,4 +45,9 @@ class Fechadura extends Model
     {
         return $this->hasMany(Admin::class);
     }
+
+    public function usuariosBloqueados()
+    {
+        return $this->hasMany(UsuarioBloqueado::class);
+    }
 }

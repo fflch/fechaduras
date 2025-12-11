@@ -6,6 +6,7 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\IndexController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UsuarioExternoController;
+use App\Http\Controllers\UsuarioBloqueadoController;
 use App\Models\Fechadura;
 use App\Services\ApiControlIdService;
 
@@ -51,3 +52,7 @@ Route::post('/fechaduras/{fechadura}/delete_usuario_externo/{usuarioExterno}', [
 // Rotas para gerenciar administradores das fechaduras
 Route::post('/fechaduras/{fechadura}/admin', [AdminController::class, 'store']);
 Route::delete('/fechaduras/{fechadura}/admin/{admin}', [AdminController::class, 'destroy']);
+
+// Rotas para gerenciar usuários bloqueados
+Route::post('/fechaduras/{fechadura}/bloquear-usuario', [UsuarioBloqueadoController::class, 'store']);
+Route::delete('/fechaduras/{fechadura}/bloquear-usuario/{usuarioBloqueado}', [UsuarioBloqueadoController::class, 'destroy']);

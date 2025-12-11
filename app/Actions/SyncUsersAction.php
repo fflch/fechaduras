@@ -4,7 +4,6 @@ namespace App\Actions;
 
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
-use App\Services\FotoUpdateService;
 
 class SyncUsersAction
 {
@@ -13,6 +12,9 @@ class SyncUsersAction
         $loadUsers = collect($api->loadUsers());
         $setores = $fechadura->setores->pluck('codset');
         $areas = $fechadura->areas->pluck('codare');
+
+        // Busca usuários bloqueados
+        $usuariosBloqueados = $fechadura->usuariosBloqueados->pluck('codpes');
 
         // Busca usuários de setores e áreas
         $usuariosSetor = collect();
@@ -56,11 +58,14 @@ class SyncUsersAction
             ];
         }
 
-        // Combina todos os usuários
+        // Combina todos os usuários (menos bloqueados)
         $usuarios = $usuariosSetor
             ->merge($alunosPos)
             ->merge($usuariosManuais)
             ->merge($usuariosExternos)
+            ->filter(function ($usuario) use ($usuariosBloqueados) {
+                return $usuariosBloqueados->doesntContain($usuario['codpes']);
+            })
             ->keyBy('codpes');
 
         // Usuários sem registration (serão excluídos)
@@ -70,8 +75,8 @@ class SyncUsersAction
 
         // IDs dos usuários do sistema
         $idsUsuariosSistema = $usuarios->keys()->map(function ($codpes) {
-            return (int)$codpes;
-        });
+                return (int)$codpes;
+            });
 
         // Usuários que estão na fechadura mas não estão no sistema
         $usuariosForaSistema = $loadUsers->filter(function ($user) use ($idsUsuariosSistema) {
@@ -79,7 +84,7 @@ class SyncUsersAction
             return !$idsUsuariosSistema->contains($userId);
         });
 
-        // Combinar ambas as listas (sem registration + fora do sistema)
+        // Combinar todas as listas para exclusão
         $todosParaExcluir = $usuariosSemRegistration->merge($usuariosForaSistema)->unique('id');
 
         // Exclui usuários da fechadura
