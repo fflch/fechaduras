@@ -25,13 +25,13 @@
                                 <input type="text" class="form-control" name="vinculo" value="" placeholder="Ex: Visitante, Prestador...">
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <!-- <div class="col-md-3">
                             <div class="mb-3">
                                 <label class="form-label">Foto</label>
                                 <input type="file" class="form-control" name="foto" accept="image/*">
                                 <small class="form-text text-muted">Formato: JPG, PNG (até 2MB)</small>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="col-md-2"> 
                             <div class="mb-3">
                                 <label class="form-label">&nbsp;</label>

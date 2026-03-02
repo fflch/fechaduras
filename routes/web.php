@@ -9,8 +9,17 @@ use App\Http\Controllers\UsuarioExternoController;
 use App\Http\Controllers\UsuarioBloqueadoController;
 use App\Models\Fechadura;
 use App\Services\ApiControlIdService;
+use App\Http\Controllers\MeuPerfilController;
 
+// Rota da página inicial
 Route::get('/',[IndexController::class, 'index']);
+   
+// Rotas perfil do usuário
+Route::get('/meu-perfil', [MeuPerfilController::class, 'index']);
+Route::get('/meu-perfil/atualizar-foto-local', [MeuPerfilController::class, 'editFotoLocal']);
+Route::post('/meu-perfil/atualizar-foto-local', [MeuPerfilController::class, 'updateFotoLocal']);   
+Route::get('/meu-perfil/senha/{fechadura}', [MeuPerfilController::class, 'editSenha']);
+Route::post('/meu-perfil/senha/{fechadura}', [MeuPerfilController::class, 'updateSenha']);
 
 // Rotas CRUD - Fechadura
 Route::get('/fechaduras',[FechaduraController::class, 'index']);

@@ -82,13 +82,15 @@ class ApiControlIdService
                 ]
             ]);
 
-            if($response->successful()){
-                // Atualizar foto apenas se o usuário não tiver foto
-                if (in_array($codpes, $usersWithoutPhotos)) {
+            if (in_array($codpes, $usersWithoutPhotos)) {
+                // Tenta foto local primeiro
+                $user = User::where('codpes', $codpes)->first();
+                if ($user && $user->foto) {
+                    FotoUpdateService::updateFoto($this->fechadura, $codpes, $user->foto);
+                } else {
+                    // Se não tem foto local, usa do replicado
                     FotoUpdateService::updateFoto($this->fechadura, $codpes);
                 }
-
-                $this->createUserGroups($codpes);
             }
         }
     }

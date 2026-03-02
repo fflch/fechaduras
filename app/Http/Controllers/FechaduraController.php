@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 /* use Illuminate\Support\Facades\Http; */
 
 // Classes do sistema
@@ -231,19 +232,34 @@ class FechaduraController extends Controller
     {
         Gate::authorize('adminFechadura', $fechadura);
 
-        // Se for foto da webcam (base64)
+        // Processa a foto
         $foto = $request->safe()->foto;
-
-        // Remove data:image/jpeg;base64, se existir
         if (strpos($foto, 'base64,') !== false) {
             $foto = base64_decode(explode('base64,', $foto)[1]);
         }
 
-        // Cria arquivo temporário
+        // Salva localmente
+        $user = User::where('codpes', $userId)->first();
+        if ($user) {
+            // Remove foto antiga se existir
+            if ($user->foto && Storage::disk('public')->exists($user->foto)) {
+                Storage::disk('public')->delete($user->foto);
+            }
+            
+            // Salva nova foto
+            $fotoPath = 'fotos_admin/' . $userId . '_' . time() . '.jpg';
+            Storage::disk('public')->put($fotoPath, $foto);
+            
+            $user->foto = $fotoPath;
+            $user->foto_atualizada_em = now();
+            $user->save();
+        }
+
+        // Upload para a fechadura
         $tempFile = tempnam(sys_get_temp_dir(), 'webcam_') . '.jpg';
         file_put_contents($tempFile, $foto);
-
         $file = new UploadedFile($tempFile, 'webcam.jpg', 'image/jpeg', null, true);
+        
         $apiService = new ApiControlIdService($fechadura);
         $result = $apiService->uploadFoto($userId, $file);
         unlink($tempFile);

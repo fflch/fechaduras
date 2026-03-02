@@ -4,6 +4,8 @@ namespace App\Actions;
 
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
+use App\Services\FotoUpdateService;
+use App\Models\User;
 
 class SyncUsersAction
 {
@@ -105,14 +107,28 @@ class SyncUsersAction
             $api->createUsers($faltantes);
         }
 
-        // Atualizar todos os usuários (fotos só para quem não tem)
-        $usersWithoutPhotos = [];
+        // Atualizar fotos dos usuários que não têm foto na fechadura
         foreach ($loadUsers as $userFechadura) {
+            // Verifica se o usuário não tem foto na fechadura
             if ($userFechadura['image_timestamp'] == 0) {
-                $usersWithoutPhotos[] = $userFechadura['registration'] ?? $userFechadura['id'];
+                $codpes = $userFechadura['registration'] ?? $userFechadura['id'];
+                
+                // Verifica se é usuário externo 
+                $usuarioInfo = $usuarios->get($codpes);
+                if ($usuarioInfo && isset($usuarioInfo['is_external']) && $usuarioInfo['is_external']) {
+                    continue;
+                }
+
+                // Tenta foto local primeiro
+                $user = User::where('codpes', $codpes)->first();
+                if ($user && $user->foto) {
+                    FotoUpdateService::updateFoto($fechadura, $codpes, $user->foto);
+                } 
+                // Se não tem foto local, usa do replicado
+                elseif ($usuarios->has($codpes)) {
+                    FotoUpdateService::updateFoto($fechadura, $codpes, null);
+                }
             }
         }
-
-        $api->updateUsers($usuarios, $usersWithoutPhotos);
     }
 }
