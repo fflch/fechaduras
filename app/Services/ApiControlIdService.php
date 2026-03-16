@@ -56,7 +56,7 @@ class ApiControlIdService
             ]);
 
             if($response->successful()){
-                $fotoPath = Arr::exists($usuario, 'is_external') ? $usuario['usuario_externo']->foto : null;
+                $fotoPath = $usuario['foto_path'] ?? null;
                 FotoUpdateService::updateFoto($this->fechadura, $codpes, $fotoPath);
                 $this->createUserGroups($codpes);
             }
@@ -85,9 +85,9 @@ class ApiControlIdService
             if($response->successful()){
                 // Atualizar foto apenas se o usuário não tiver foto
                 if (in_array($codpes, $usersWithoutPhotos)) {
-                    FotoUpdateService::updateFoto($this->fechadura, $codpes);
+                    $fotoPath = $usuario['foto_path'] ?? null;
+                    FotoUpdateService::updateFoto($this->fechadura, $codpes, $fotoPath);
                 }
-
                 $this->createUserGroups($codpes);
             }
         }

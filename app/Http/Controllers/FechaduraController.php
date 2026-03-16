@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 /* use Illuminate\Support\Facades\Http; */
 
 // Classes do sistema
@@ -13,6 +14,7 @@ use App\Http\Requests\FechaduraRequest;
 use App\Http\Requests\CadastrarFotoRequest;
 use App\Http\Requests\CadastrarSenhaRequest;
 use App\Models\Fechadura;
+use App\Models\UsuarioExterno;
 use App\Models\User;
 use App\Models\Admin;
 use App\Services\ApiControlIdService;
@@ -226,6 +228,24 @@ class FechaduraController extends Controller
         ]);
     }
 
+    // Ztualiza a foto do model no banco e gerencia o storage
+    private function atualizarFotoModel($model, $nomeArquivo)
+    {
+        $fotoAntiga = $model->foto;
+        $model->foto = $nomeArquivo;
+
+        if ($model->save()) {
+            if ($fotoAntiga) {
+                Storage::disk('fotos')->delete($fotoAntiga);
+            }
+            return true;
+        }
+
+        // Se falhou, remove o arquivo novo para não acumular lixo
+        Storage::disk('fotos')->delete($nomeArquivo);
+        return false;
+    }
+
     // Cadastra foto do usuário na fechadura
     public function cadastrarFoto(CadastrarFotoRequest $request, Fechadura $fechadura, $userId)
     {
@@ -249,6 +269,19 @@ class FechaduraController extends Controller
         unlink($tempFile);
 
         if ($result['success']) {
+            // salva a foto localmente
+            $nomeArquivo = uniqid() . '.jpg';
+            Storage::disk('fotos')->put($nomeArquivo, $foto);
+
+            // Determina o model (externo ou interno)
+            $model = $userId > 10000
+                ? UsuarioExterno::find($userId - 10000)
+                : User::where('codpes', $userId)->first();
+
+            if ($model) {
+                $this->atualizarFotoModel($model, $nomeArquivo);
+            }
+            
             return back()
                 ->with('alert-success', $result['message']);
         }
