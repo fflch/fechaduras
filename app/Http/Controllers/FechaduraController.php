@@ -274,9 +274,13 @@ class FechaduraController extends Controller
             Storage::disk('fotos')->put($nomeArquivo, $foto);
 
             // Determina o model (externo ou interno)
-            $model = $userId > 10000
-                ? UsuarioExterno::find($userId - 10000)
-                : User::where('codpes', $userId)->first();
+            $model = null;
+            if ($userId > 10000) {
+                $model = UsuarioExterno::find($userId - 10000);
+            }
+            if (!$model) {
+                $model = User::where('codpes', $userId)->first();
+            }
 
             if ($model) {
                 $this->atualizarFotoModel($model, $nomeArquivo);
