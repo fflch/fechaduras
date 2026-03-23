@@ -26,6 +26,7 @@ use App\Services\ReplicadoService;
 use App\Actions\CreateSetorAction;
 use App\Actions\SyncUsersAction;
 use App\Actions\CreateAreasAction;
+use Illuminate\Support\Str;
 
 class FechaduraController extends Controller
 {
@@ -228,67 +229,41 @@ class FechaduraController extends Controller
         ]);
     }
 
-    // Ztualiza a foto do model no banco e gerencia o storage
-    private function atualizarFotoModel($model, $nomeArquivo)
-    {
-        $fotoAntiga = $model->foto;
-        $model->foto = $nomeArquivo;
-
-        if ($model->save()) {
-            if ($fotoAntiga) {
-                Storage::disk('fotos')->delete($fotoAntiga);
-            }
-            return true;
-        }
-
-        // Se falhou, remove o arquivo novo para não acumular lixo
-        Storage::disk('fotos')->delete($nomeArquivo);
-        return false;
-    }
-
     // Cadastra foto do usuário na fechadura
     public function cadastrarFoto(CadastrarFotoRequest $request, Fechadura $fechadura, $userId)
     {
         Gate::authorize('adminFechadura', $fechadura);
 
-        // Se for foto da webcam (base64)
         $foto = $request->safe()->foto;
 
-        // Remove data:image/jpeg;base64, se existir
+        // Remove data:image/jpeg;base64, porque está passando por input type hidden
         if (strpos($foto, 'base64,') !== false) {
             $foto = base64_decode(explode('base64,', $foto)[1]);
         }
 
-        // Cria arquivo temporário
-        $tempFile = tempnam(sys_get_temp_dir(), 'webcam_') . '.jpg';
-        file_put_contents($tempFile, $foto);
+        $fotoName = Str::uuid() . '.jpg';
+        Storage::disk('fotos')->put($fotoName, $foto);
 
-        $file = new UploadedFile($tempFile, 'webcam.jpg', 'image/jpeg', null, true);
         $apiService = new ApiControlIdService($fechadura);
-        $result = $apiService->uploadFoto($userId, $file);
-        unlink($tempFile);
+        $result = $apiService->uploadFoto($userId, $fotoName);
 
         if ($result['success']) {
-            // salva a foto localmente
-            $nomeArquivo = uniqid() . '.jpg';
-            Storage::disk('fotos')->put($nomeArquivo, $foto);
 
-            // Determina o model (externo ou interno)
-            $model = null;
-            if ($userId > 10000) {
-                $model = UsuarioExterno::find($userId - 10000);
-            }
-            if (!$model) {
-                $model = User::where('codpes', $userId)->first();
-            }
+            $user = UsuarioExterno::find($userId - 10000) ??
+                User::where('codpes', $userId)->first();
 
-            if ($model) {
-                $this->atualizarFotoModel($model, $nomeArquivo);
+            if ( ! is_null($user->foto) ) {
+                Storage::disk('fotos')->delete($user->foto);
             }
-            
+            $user->foto = $fotoName;
+            $user->save();
+
             return back()
                 ->with('alert-success', $result['message']);
+
         }
+
+        Storage::disk('fotos')->delete($fotoName);
 
         return back()
             ->with('alert-danger', $result['message'])

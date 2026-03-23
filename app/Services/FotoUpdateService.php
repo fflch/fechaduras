@@ -12,7 +12,7 @@ use Uspdev\Wsfoto;
 class FotoUpdateService {
 
     // Upload de foto automática do sistema USP
-    public static function updateFoto(Fechadura $fechadura, $codpes, $fotoPath = null)
+    public static function updateFoto(Fechadura $fechadura, $codpes, $foto = null)
     {
         $sessao = LockSessionService::conexao(
             $fechadura->ip, $fechadura->porta, $fechadura->usuario, $fechadura->senha
@@ -21,23 +21,14 @@ class FotoUpdateService {
         $url = 'http://' . $fechadura->ip . ':' . $fechadura->porta . '/user_set_image.fcgi?user_id='. $codpes .'&timestamp='.time().'&match=0&session=' . $sessao;
 
         // Prioridade 1: foto usuário externo
-        if ($fotoPath && Storage::disk('fotos')->exists($fotoPath)) {
-            $img = Storage::disk('fotos')->get($fotoPath);
+        if ( ! is_null($foto) ) {
+            $img = Storage::disk('fotos')->get($foto);
         }
-        // Prioridade 2: foto local de usuario usp
-        elseif (!$fotoPath) {
+        else {
             $user = User::where('codpes', $codpes)->first();
-            if ($user && $user->foto && Storage::disk('fotos')->exists($user->foto)) {
-                $img = Storage::disk('fotos')->get($user->foto);
-            }
-        }
-
-        // Se não tem foto local tenta do replicado
-        if (!isset($img)) {
-            $img = base64_decode(Wsfoto::obter($codpes));
-            if (!$img) {
-                return null; // Sem imagem disponível
-            }
+            // Prioridade 2: foto local de usuario usp ou do Wsfoto
+            $img = $user?->foto ? Storage::disk('fotos')->get($user->foto) :
+                base64_decode(Wsfoto::obter($codpes));
         }
 
         $response = Http::withHeaders(['Content-Type' => 'application/octet-stream'])

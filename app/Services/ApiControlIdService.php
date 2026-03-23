@@ -6,7 +6,7 @@ use App\Services\LockSessionService;
 use \App\Models\Log;
 use App\Models\Fechadura;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 
 class ApiControlIdService
 {
@@ -56,8 +56,8 @@ class ApiControlIdService
             ]);
 
             if($response->successful()){
-                $fotoPath = $usuario['foto_path'] ?? null;
-                FotoUpdateService::updateFoto($this->fechadura, $codpes, $fotoPath);
+                $foto = $usuario['foto'] ?? null;
+                FotoUpdateService::updateFoto($this->fechadura, $codpes, $foto);
                 $this->createUserGroups($codpes);
             }
         }
@@ -85,8 +85,8 @@ class ApiControlIdService
             if($response->successful()){
                 // Atualizar foto apenas se o usuário não tiver foto
                 if (in_array($codpes, $usersWithoutPhotos)) {
-                    $fotoPath = $usuario['foto_path'] ?? null;
-                    FotoUpdateService::updateFoto($this->fechadura, $codpes, $fotoPath);
+                    $foto = $usuario['foto'] ?? null;
+                    FotoUpdateService::updateFoto($this->fechadura, $codpes, $foto);
                 }
                 $this->createUserGroups($codpes);
             }
@@ -155,14 +155,14 @@ class ApiControlIdService
         return $count;
     }
 
-    public function uploadFoto($userId, $foto)
+    public function uploadFoto($userId, $fotoName)
     {
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/user_set_image.fcgi?user_id='. $userId .'&timestamp='.time().'&match=0&session=' . $this->sessao;
 
         $response = Http::timeout(30)->withHeaders([
             'Content-Type' => 'application/octet-stream'
         ])->withBody(
-            file_get_contents($foto->path()),
+            Storage::disk('fotos')->get($fotoName),
             'application/octet-stream'
         )->post($url);
 
