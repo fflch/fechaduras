@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 /* use Illuminate\Support\Facades\Http; */
 
 // Classes do sistema
@@ -13,6 +14,7 @@ use App\Http\Requests\FechaduraRequest;
 use App\Http\Requests\CadastrarFotoRequest;
 use App\Http\Requests\CadastrarSenhaRequest;
 use App\Models\Fechadura;
+use App\Models\UsuarioExterno;
 use App\Models\User;
 use App\Models\Admin;
 use App\Services\ApiControlIdService;
@@ -24,6 +26,7 @@ use App\Services\ReplicadoService;
 use App\Actions\CreateSetorAction;
 use App\Actions\SyncUsersAction;
 use App\Actions\CreateAreasAction;
+use Illuminate\Support\Str;
 
 class FechaduraController extends Controller
 {
@@ -231,27 +234,36 @@ class FechaduraController extends Controller
     {
         Gate::authorize('adminFechadura', $fechadura);
 
-        // Se for foto da webcam (base64)
         $foto = $request->safe()->foto;
 
-        // Remove data:image/jpeg;base64, se existir
+        // Remove data:image/jpeg;base64, porque está passando por input type hidden
         if (strpos($foto, 'base64,') !== false) {
             $foto = base64_decode(explode('base64,', $foto)[1]);
         }
 
-        // Cria arquivo temporário
-        $tempFile = tempnam(sys_get_temp_dir(), 'webcam_') . '.jpg';
-        file_put_contents($tempFile, $foto);
+        $fotoName = Str::uuid() . '.jpg';
+        Storage::disk('fotos')->put($fotoName, $foto);
 
-        $file = new UploadedFile($tempFile, 'webcam.jpg', 'image/jpeg', null, true);
         $apiService = new ApiControlIdService($fechadura);
-        $result = $apiService->uploadFoto($userId, $file);
-        unlink($tempFile);
+        $result = $apiService->uploadFoto($userId, $fotoName);
 
         if ($result['success']) {
+
+            $user = UsuarioExterno::find($userId - 10000) ??
+                User::where('codpes', $userId)->first();
+
+            if ( ! is_null($user->foto) ) {
+                Storage::disk('fotos')->delete($user->foto);
+            }
+            $user->foto = $fotoName;
+            $user->save();
+
             return back()
                 ->with('alert-success', $result['message']);
+
         }
+
+        Storage::disk('fotos')->delete($fotoName);
 
         return back()
             ->with('alert-danger', $result['message'])

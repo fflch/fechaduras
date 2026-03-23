@@ -6,6 +6,7 @@ use App\Models\User;
 use Uspdev\Replicado\Pessoa;
 use App\Models\Fechadura;
 use App\Models\UsuarioExterno;
+use Illuminate\Support\Facades\Storage;
 
 class UsuarioService
 {
@@ -53,7 +54,14 @@ class UsuarioService
         // Verificar se é usuário externo (IDs acima de 10000)
         if ($userId > 10000) {
             $usuarioExternoId = $userId - 10000;
-            UsuarioExterno::destroy($usuarioExternoId);
+            $usuarioExterno = UsuarioExterno::find($usuarioExternoId);
+            if ($usuarioExterno) {
+                // Apaga a foto antes de deletar o registro
+                if ($usuarioExterno->foto) {
+                    Storage::disk('fotos')->delete($usuarioExterno->foto);
+                }
+                $usuarioExterno->delete();
+            }
         }
     }
 }

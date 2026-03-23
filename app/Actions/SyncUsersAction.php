@@ -54,7 +54,7 @@ class SyncUsersAction
                 'nompes' => $usuarioExterno->nome . ' - ' . $usuarioExterno->vinculo,
                 'name' => $usuarioExterno->nome . ' - ' . $usuarioExterno->vinculo,
                 'is_external' => true,
-                'usuario_externo' => $usuarioExterno
+                'foto' => $usuarioExterno->foto,
             ];
         }
 
