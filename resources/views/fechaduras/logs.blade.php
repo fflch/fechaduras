@@ -44,6 +44,7 @@
                         <tr>
                             <th>Data/Hora</th>
                             <th>Nº USP</th>
+                            <th>Usuário</th>
                             <th>Status</th>
                         </tr>
                     </thead>
@@ -52,6 +53,13 @@
                         <tr>
                             <td>{{ $log->datahora->format('d/m/Y H:i:s') }}</td>
                             <td>{{ $log->codpes }}</td>
+                            <td>
+                                @if($log->codpes == 0)
+                                    —
+                                @else
+                                    {{ $log->user_name ?? 'Não cadastrado' }}
+                                @endif
+                            </td>
                             <td>
                                 @if($log->codpes == 0)
                                     <span class="badge bg-secondary">Não identificado</span>
