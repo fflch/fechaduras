@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
+use App\Models\User;
 
 class SyncUsersAction
 {
@@ -68,6 +69,21 @@ class SyncUsersAction
             })
             ->keyBy('codpes');
 
+        // Incluir administradores na lista de usuários
+        $admins = $fechadura->admins->pluck('codpes')->toArray();
+        foreach ($admins as $codpes) {
+            if (!$usuarios->has($codpes)) {
+                $user = User::where('codpes', $codpes)->first();
+                if ($user) {
+                    $usuarios[$codpes] = [
+                        'codpes' => $user->codpes,
+                        'nompes' => $user->name,
+                        'name'   => $user->name,
+                    ];
+                }
+            }
+        }
+
         // Usuários sem registration (serão excluídos)
         $usuariosSemRegistration = $loadUsers->filter(function ($user) {
             return empty($user['registration']) || $user['registration'] === '';
@@ -114,5 +130,22 @@ class SyncUsersAction
         }
 
         $api->updateUsers($usuarios, $usersWithoutPhotos);
+
+        // Sincronizar privilégios de administrador na fechadura
+        $adminsLocais = $fechadura->admins->pluck('codpes')->toArray();
+
+        $userRoles = $api->loadUserRoles();
+        $currentAdminIds = collect($userRoles)->where('role', 1)->pluck('user_id')->toArray();
+
+        $idsParaAdicionar = array_diff($adminsLocais, $currentAdminIds);
+        $idsParaRemover = array_diff($currentAdminIds, $adminsLocais);
+
+        foreach ($idsParaAdicionar as $userId) {
+            $api->createUserRole($userId);
+        }
+
+        foreach ($idsParaRemover as $userId) {
+            $api->deleteUserRole($userId);
+        }
     }
 }

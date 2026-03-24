@@ -345,4 +345,40 @@ class ApiControlIdService
             'content' => null
         ];
     }
+
+    // Carrega todos os registros de user_roles da fechadura.
+    public function loadUserRoles()
+    {
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/load_objects.fcgi?session=' . $this->sessao;
+        $response = Http::post($url, ['object' => 'user_roles']);
+        return $response->json()['user_roles'] ?? [];
+    }
+
+    // Cria um registro de user_role para um usuário (torna-o administrador).
+    public function createUserRole($userId, $role = 1)
+    {
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/create_objects.fcgi?session=' . $this->sessao;
+        $response = Http::asJson()->post($url, [
+            'object' => 'user_roles',
+            'values' => [
+                ['user_id' => (int)$userId, 'role' => $role]
+            ]
+        ]);
+        return $response->successful();
+    }
+
+    // Remove o registro de user_role de um usuário (revoga privilégios de admin).
+    public function deleteUserRole($userId)
+    {
+        $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/destroy_objects.fcgi?session=' . $this->sessao;
+        $response = Http::asJson()->post($url, [
+            'object' => 'user_roles',
+            'where' => [
+                'user_roles' => [
+                    'user_id' => (int)$userId
+                ]
+            ]
+        ]);
+        return $response->successful();
+    }
 }

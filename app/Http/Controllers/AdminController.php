@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Gate;
 use App\Models\Admin;
 use App\Models\Fechadura;
+use App\Models\User;
 use App\Http\Requests\AdminRequest;
 use App\Services\ReplicadoService;
+use Uspdev\Replicado\Pessoa;
 
 class AdminController extends Controller
 {
@@ -20,6 +22,15 @@ class AdminController extends Controller
         if (count($pessoa) == 0 ) {
            return back()->with('alert-danger', 'Número USP não encontrado!');
         }
+
+        // Garantir que o usuario exista na tabela users
+        $dados = Pessoa::dump($request->codpes, ['nompesttd']);
+        $nome = $dados['nompesttd'] ?? 'Nome não encontrado';
+        
+        User::firstOrCreate(
+            ['codpes' => $request->codpes],
+            ['name' => $nome]
+        );
 
         // Verifica se já é admin da fechadura
         $jaEAdmin = Admin::where('codpes', $request->codpes)
