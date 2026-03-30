@@ -13,6 +13,8 @@ class SyncUsersAction
         $loadUsers = collect($api->loadUsers());
         $setores = $fechadura->setores->pluck('codset');
         $areas = $fechadura->areas->pluck('codare');
+        $admins = $fechadura->admins->pluck('codpes');
+        $usersRoleAdmin = $api->loadUsersRoleAdmin();
 
         // Busca usuários bloqueados
         $usuariosBloqueados = $fechadura->usuariosBloqueados->pluck('codpes');
@@ -70,7 +72,6 @@ class SyncUsersAction
             ->keyBy('codpes');
 
         // Incluir administradores na lista de usuários
-        $admins = $fechadura->admins->pluck('codpes')->toArray();
         foreach ($admins as $codpes) {
             if (!$usuarios->has($codpes)) {
                 $user = User::where('codpes', $codpes)->first();
@@ -132,20 +133,12 @@ class SyncUsersAction
         $api->updateUsers($usuarios, $usersWithoutPhotos);
 
         // Sincronizar privilégios de administrador na fechadura
-        $adminsLocais = $fechadura->admins->pluck('codpes')->toArray();
-
-        $userRoles = $api->loadUserRoles();
-        $currentAdminIds = collect($userRoles)->where('role', 1)->pluck('user_id')->toArray();
-
-        $idsParaAdicionar = array_diff($adminsLocais, $currentAdminIds);
-        $idsParaRemover = array_diff($currentAdminIds, $adminsLocais);
-
-        foreach ($idsParaAdicionar as $userId) {
-            $api->createUserRole($userId);
+        foreach ($admins->diff($usersRoleAdmin) as $user) {
+            $api->createUserRoleAdmin($user);
         }
 
-        foreach ($idsParaRemover as $userId) {
-            $api->deleteUserRole($userId);
+        foreach ($usersRoleAdmin->diff($admins) as $user) {
+            $api->deleteUserRoleAdmin($user);
         }
     }
 }

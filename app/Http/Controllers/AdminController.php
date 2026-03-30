@@ -12,25 +12,9 @@ use Uspdev\Replicado\Pessoa;
 
 class AdminController extends Controller
 {
-    public function store(AdminRequest $request, Fechadura $fechadura) 
+    public function store(AdminRequest $request, Fechadura $fechadura)
     {
         Gate::authorize('admin');
-
-        // Verificar se o usuário é da usp
-        $pessoa = ReplicadoService::retornaCodpes($request->codpes);
-
-        if (count($pessoa) == 0 ) {
-           return back()->with('alert-danger', 'Número USP não encontrado!');
-        }
-
-        // Garantir que o usuario exista na tabela users
-        $dados = Pessoa::dump($request->codpes, ['nompesttd']);
-        $nome = $dados['nompesttd'] ?? 'Nome não encontrado';
-        
-        User::firstOrCreate(
-            ['codpes' => $request->codpes],
-            ['name' => $nome]
-        );
 
         // Verifica se já é admin da fechadura
         $jaEAdmin = Admin::where('codpes', $request->codpes)
@@ -41,6 +25,21 @@ class AdminController extends Controller
             return back()->with('alert-warning', 'Esta pessoa já é administradora da fechadura!');
         }
 
+        // Verificar se o usuário é da usp
+        $pessoa = ReplicadoService::dump($request->codpes);
+
+        if ( !$pessoa ) {
+           return back()->with('alert-danger', 'Número USP não encontrado!');
+        }
+
+        User::firstOrCreate([
+                'codpes' => $request->codpes
+            ],
+            [
+                'name' => $pessoa['nompesttd'] ?? 'Nome não encontrado'
+            ]
+        );
+
         $admin = new Admin();
         $admin->codpes = $request->codpes;
         $admin->fechadura_id = $fechadura->id;
@@ -50,7 +49,7 @@ class AdminController extends Controller
         return back()->with('alert-success', 'Administrador cadastrado com sucesso!');
     }
 
-    public function destroy(Fechadura $fechadura, Admin $admin)
+    public function destroy(Admin $admin)
     {
         Gate::authorize('admin');
         $admin->delete();

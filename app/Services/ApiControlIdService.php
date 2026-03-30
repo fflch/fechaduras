@@ -346,36 +346,50 @@ class ApiControlIdService
         ];
     }
 
-    // Carrega todos os registros de user_roles da fechadura.
-    public function loadUserRoles()
+    // Carrega todos os registros de user_roles da fechadura que sejam admins.
+    public function loadUsersRoleAdmin()
     {
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/load_objects.fcgi?session=' . $this->sessao;
-        $response = Http::post($url, ['object' => 'user_roles']);
-        return $response->json()['user_roles'] ?? [];
+        $response = Http::post($url, [
+            'object' => 'user_roles',
+            'fields' => [
+                'user_id'
+            ],
+            'where' => [
+                'user_roles' => [
+                    'role' => 1
+                ]
+            ]
+        ]);
+        return collect($response->json()['user_roles'])->pluck('user_id') ?? collect([]);
     }
 
     // Cria um registro de user_role para um usuário (torna-o administrador).
-    public function createUserRole($userId, $role = 1)
+    public function createUserRoleAdmin($user)
     {
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/create_objects.fcgi?session=' . $this->sessao;
         $response = Http::asJson()->post($url, [
             'object' => 'user_roles',
             'values' => [
-                ['user_id' => (int)$userId, 'role' => $role]
+                [
+                    'user_id' => (int)$user,
+                    'role' => 1
+                ]
             ]
         ]);
         return $response->successful();
     }
 
     // Remove o registro de user_role de um usuário (revoga privilégios de admin).
-    public function deleteUserRole($userId)
+    public function deleteUserRoleAdmin($user)
     {
         $url = 'http://' . $this->fechadura->ip . ':' . $this->fechadura->porta . '/destroy_objects.fcgi?session=' . $this->sessao;
         $response = Http::asJson()->post($url, [
             'object' => 'user_roles',
             'where' => [
                 'user_roles' => [
-                    'user_id' => (int)$userId
+                    'user_id' => (int)$user,
+                    'role' => 1
                 ]
             ]
         ]);
