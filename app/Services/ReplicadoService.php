@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Uspdev\Replicado\DB;
 use Uspdev\Replicado\Uteis;
+use Uspdev\Replicado\Pessoa;
 
 class ReplicadoService{
 
@@ -60,17 +61,10 @@ class ReplicadoService{
 
     }
 
-    public static function retornaCodpes($codpes){
+    public static function dump($codpes){
 
-        $query = "SELECT DISTINCT (l.codpes) 
-        FROM PESSOA l 
-        WHERE l.codpes = convert(int,:codpes)"; 
-        
-        $param = [
-            'codpes' => $codpes,
-        ];
+        return Pessoa::dump($codpes, ['nompesttd']);
 
-        return DB::fetch($query, $param);
     }
 
 }

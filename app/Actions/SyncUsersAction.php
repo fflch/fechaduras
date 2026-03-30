@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
+use App\Models\User;
 
 class SyncUsersAction
 {
@@ -12,6 +13,8 @@ class SyncUsersAction
         $loadUsers = collect($api->loadUsers());
         $setores = $fechadura->setores->pluck('codset');
         $areas = $fechadura->areas->pluck('codare');
+        $admins = $fechadura->admins->pluck('codpes');
+        $usersRoleAdmin = $api->loadUsersRoleAdmin();
 
         // Busca usuários bloqueados
         $usuariosBloqueados = $fechadura->usuariosBloqueados->pluck('codpes');
@@ -68,6 +71,20 @@ class SyncUsersAction
             })
             ->keyBy('codpes');
 
+        // Incluir administradores na lista de usuários
+        foreach ($admins as $codpes) {
+            if (!$usuarios->has($codpes)) {
+                $user = User::where('codpes', $codpes)->first();
+                if ($user) {
+                    $usuarios[$codpes] = [
+                        'codpes' => $user->codpes,
+                        'nompes' => $user->name,
+                        'name'   => $user->name,
+                    ];
+                }
+            }
+        }
+
         // Usuários sem registration (serão excluídos)
         $usuariosSemRegistration = $loadUsers->filter(function ($user) {
             return empty($user['registration']) || $user['registration'] === '';
@@ -114,5 +131,14 @@ class SyncUsersAction
         }
 
         $api->updateUsers($usuarios, $usersWithoutPhotos);
+
+        // Sincronizar privilégios de administrador na fechadura
+        foreach ($admins->diff($usersRoleAdmin) as $user) {
+            $api->createUserRoleAdmin($user);
+        }
+
+        foreach ($usersRoleAdmin->diff($admins) as $user) {
+            $api->deleteUserRoleAdmin($user);
+        }
     }
 }

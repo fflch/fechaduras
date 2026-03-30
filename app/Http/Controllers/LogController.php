@@ -22,6 +22,8 @@ class LogController extends Controller
 
         // Busca os logs do banco local, ordenados pelos mais recentes
         $logs = Log::where('fechadura_id', $fechadura->id)
+                    ->leftJoin('users', 'logs.codpes', '=', 'users.codpes')
+                    ->select('logs.*', 'users.name as user_name')
                     ->orderBy('datahora', 'desc')
                     ->paginate(20); // Paginação para muitos registros
 

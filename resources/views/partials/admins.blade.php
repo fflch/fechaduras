@@ -17,11 +17,11 @@
                     @foreach ($admins as $admin)
                         <li class="list-group-item">
                             @can('admin')
-                            <form method="post" action="/fechaduras/{{ $fechadura->id }}/admin/{{ $admin->id }}" class="d-inline">
+                            <form method="post" action="/fechaduras/admin/{{ $admin->id }}" class="d-inline">
                                 {{ $admin->codpes }} - {{ $admin->user->name ?? 'Nome não encontrado' }}
                                 <br>
                                 <small class="text-muted">
-                                    Cadastrado por: {{ $admin->cadastradoPor->name ?? 'Sistema' }} | 
+                                    Cadastrado por: {{ $admin->cadastradoPor->name ?? 'Sistema' }} |
                                     {{ $admin->created_at->format('d/m/Y H:i') }}
                                 </small>
                                 @csrf
@@ -35,7 +35,7 @@
                                 {{ $admin->codpes }} - {{ $admin->user->name ?? 'Nome não encontrado' }}
                                 <br>
                                 <small class="text-muted">
-                                    Cadastrado por: {{ $admin->cadastradoPor->name ?? 'Sistema' }} | 
+                                    Cadastrado por: {{ $admin->cadastradoPor->name ?? 'Sistema' }} |
                                     {{ $admin->created_at->format('d/m/Y H:i') }}
                                 </small>
                             </div>
