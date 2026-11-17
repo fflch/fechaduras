@@ -2,6 +2,8 @@
 
 namespace App\Actions;
 
+use App\Actions\AplicarPendenciasAction;
+use App\Actions\AtualizarEspelhoFechaduraAction;
 use App\Services\ApiControlIdService;
 use App\Services\ReplicadoService;
 use App\Models\User;
@@ -140,5 +142,12 @@ class SyncUsersAction
         foreach ($usersRoleAdmin->diff($admins) as $user) {
             $api->deleteUserRoleAdmin($user);
         }
+
+        // Aplica o que os usuários pediram em "Meu perfil" (nova foto / nova senha)
+        AplicarPendenciasAction::execute($fechadura, $api, $usuarios);
+ 
+        // Atualiza o espelho local usado pela página "Meu perfil"
+        AtualizarEspelhoFechaduraAction::execute($fechadura, $api);
+
     }
 }
