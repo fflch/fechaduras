@@ -35,6 +35,10 @@
                     @if(count($fechadurasStatus) === 0)
                         <p>Você não está cadastrado em nenhuma fechadura.</p>
                     @else
+                        <div class="alert alert-secondary small">
+                            <i class="fas fa-moon"></i>
+                            Alterações de foto e senha possuem prazo de atualização de 24 horas.
+                        </div>
                         <table class="table table-hover">
                             <thead>
                                 <tr><th>Local</th><th>Foto</th><th>Senha</th><th>Ação</th></tr>
@@ -43,8 +47,20 @@
                                 @foreach($fechadurasStatus as $item)
                                 <tr>
                                     <td>{{ $item->fechadura->local }}</td>
-                                    <td><span class="badge bg-{{ $item->tem_foto ? 'success' : 'danger' }}">{{ $item->tem_foto ? 'Sim' : 'Não' }}</span></td>
-                                    <td><span class="badge bg-{{ $item->tem_senha ? 'success' : 'danger' }}">{{ $item->tem_senha ? 'Sim' : 'Não' }}</span></td>
+                                    <td>
+                                        @if($item->foto_pendente)
+                                            <span class="badge bg-warning text-dark">Pendente</span>
+                                        @else
+                                            <span class="badge bg-{{ $item->tem_foto ? 'success' : 'danger' }}">{{ $item->tem_foto ? 'Sim' : 'Não' }}</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($item->senha_pendente)
+                                            <span class="badge bg-warning text-dark">Pendente</span>
+                                        @else
+                                            <span class="badge bg-{{ $item->tem_senha ? 'success' : 'danger' }}">{{ $item->tem_senha ? 'Sim' : 'Não' }}</span>
+                                        @endif
+                                    </td>
                                     <td><a href="/meu-perfil/senha/{{ $item->fechadura->id }}" class="btn btn-sm btn-warning">Alterar senha</a></td>
                                 </tr>
                                 @endforeach
